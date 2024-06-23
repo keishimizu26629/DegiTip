@@ -16,11 +16,14 @@ services:
     ports:
       - "3001:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://api:3000
+      NEXT_PUBLIC_API_URL: http://api:3000
     volumes:
-      - ./front:/usr/src/app
-      - /usr/src/app/.next
+      - ./front/src:/usr/src/app/src
+      - ./front/config:/usr/src/app/config
+      - ./front/next.config.mjs:/usr/src/app/next.config.mjs
       - /usr/src/app/node_modules
+      - /usr/src/app/.next
+
 
   db:
     image: postgres:13
