@@ -9,7 +9,7 @@ services:
     depends_on:
       - db
     environment:
-      DATABASE_URL: postgresql://user:password@db:5432/myapp
+      DATABASE_URL: ${DATABASE_URL}
 
   front:
     build: ./front
