@@ -3,13 +3,14 @@ services:
     build: ./api
     ports:
       - "3000:3000"
-    volumes:
-      - ./api:/usr/src/app
-      - /usr/src/app/node_modules
     depends_on:
       - db
     environment:
       DATABASE_URL: ${DATABASE_URL}
+    volumes:
+      - ./api:/usr/src/app
+      - /usr/src/app/node_modules
+      - ./api/prisma:/usr/src/app/prisma
 
   front:
     build: ./front
@@ -23,7 +24,6 @@ services:
       - ./front/next.config.mjs:/usr/src/app/next.config.mjs
       - /usr/src/app/node_modules
       - /usr/src/app/.next
-
 
   db:
     image: postgres:13
