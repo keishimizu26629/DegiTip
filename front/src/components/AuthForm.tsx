@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
 
 interface AuthFormProps {
   type: 'login' | 'register';
@@ -11,14 +12,39 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+  const [error, setError] = useState('');
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-  };
+    const endpoint = type === 'login' ? 'http://localhost:3000/login' : 'http://localhost:3000/register';
+    const payload = type === 'login' ? { email, password } : { email, password, name };
 
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to authenticate');
+      }
+
+      const data = await response.json();
+      Cookies.set('token', data.token, { expires: 7 }); // 7 days expiry
+      Cookies.set('user', JSON.stringify(data.user), { expires: 7 });
+      console.log('Authentication successful, token and user info saved in cookies');
+      router.push('/profile');
+    } catch (error) {
+      console.error('Authentication error:', error);
+      setError('Authentication failed. Please check your credentials and try again.');
+    }
+  };
+  
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {error && <p className="text-red-500">{error}</p>}
       {type === 'register' && (
         <div>
           <label htmlFor="name" className="block text-sm font-medium text-gray-700">
@@ -30,7 +56,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
-            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-black"
           />
         </div>
       )}
@@ -44,7 +70,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-black"
         />
       </div>
       <div>
@@ -57,7 +83,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 text-black"
         />
       </div>
       <div>
