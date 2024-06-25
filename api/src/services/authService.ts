@@ -1,27 +1,42 @@
-import { PrismaClient } from '@prisma/client'
-import bcrypt from 'bcryptjs'
-import jwt from 'jsonwebtoken'
-import crypto from 'crypto'
+import { PrismaClient, Prisma } from '@prisma/client';
+import bcrypt from 'bcryptjs';
+import jwt from 'jsonwebtoken';
 
-const prisma = new PrismaClient()
+const prisma = new PrismaClient();
 
-export async function registerUser(email: string, password: string, name?: string) {
-  const hashedPassword = await bcrypt.hash(password, 10)
-  const emailVerifyToken = crypto.randomBytes(32).toString('hex')
+export async function registerUser(email: string, password: string, name: string) {
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+    const user = await prisma.user.create({
+      data: {
+        email,
+        password: hashedPassword,
+        name,
+      },
+    });
 
-  const user = await prisma.user.create({
-    data: {
-      email,
-      password: hashedPassword,
-      name,
-      emailVerifyToken,
-      emailVerified: true,  // 一時的に全てのユーザーを確認済みとする
-    },
-  })
+    const token = jwt.sign(
+      { userId: user.id },
+      process.env.JWT_SECRET as string,
+      { expiresIn: '1d' }
+    );
 
-  // ここで確認メールを送信する処理を追加します（後で実装）
-
-  return { id: user.id, email: user.email, name: user.name }
+    return {
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name
+      }
+    };
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2002') {
+        throw new Error('A user with this email already exists');
+      }
+    }
+    throw error;
+  }
 }
 
 export async function loginUser(email: string, password: string) {
