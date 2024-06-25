@@ -9,11 +9,13 @@ const prisma = new PrismaClient();
 const port = process.env.PORT || 3000;
 
 // CORS設定
-app.use(cors({
-  origin: 'http://localhost:3001', // フロントエンドのURL
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-  credentials: true,
-}));
+app.use(
+  cors({
+    origin: 'http://localhost:3001', // フロントエンドのURL
+    methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+    credentials: true,
+  }),
+);
 
 app.use(express.json());
 
@@ -24,11 +26,15 @@ const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
 
   if (token == null) return res.sendStatus(401);
 
-  jwt.verify(token, process.env.JWT_SECRET as string, (err: jwt.VerifyErrors | null, decoded: any) => {
-    if (err) return res.sendStatus(403);
-    req.user = { userId: decoded.userId };
-    next();
-  });
+  jwt.verify(
+    token,
+    process.env.JWT_SECRET as string,
+    (err: jwt.VerifyErrors | null, decoded: any) => {
+      if (err) return res.sendStatus(403);
+      req.user = { userId: decoded.userId };
+      next();
+    },
+  );
 };
 
 app.get('/', (req: Request, res: Response) => {
@@ -95,6 +101,24 @@ app.put('/api/users/:id', async (req: Request, res: Response) => {
   }
 });
 
+app.get('/api/users/:memberNumber', async (req: Request, res: Response) => {
+  const { memberNumber } = req.params;
+  try {
+    const user = await prisma.user.findUnique({
+      where: { memberNumber },
+      select: { id: true, name: true, memberNumber: true, email: true },
+    });
+
+    if (user) {
+      res.json(user);
+    } else {
+      res.status(404).json({ error: 'User not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 app.post('/login', async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
@@ -130,7 +154,7 @@ app.get('/api/profile', authenticateToken, async (req: Request, res: Response) =
 
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, name: true, email: true }
+      select: { id: true, name: true, email: true },
     });
 
     if (user) {
@@ -149,7 +173,7 @@ app.put('/api/profile', authenticateToken, async (req: Request, res: Response) =
   try {
     const updatedUser = await prisma.user.update({
       where: { id: req.user?.userId },
-      data: { name }
+      data: { name },
     });
     res.json({ name: updatedUser.name });
   } catch (error) {
