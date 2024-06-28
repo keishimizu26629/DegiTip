@@ -119,6 +119,27 @@ app.get('/api/users/:memberNumber', async (req: Request, res: Response) => {
   }
 });
 
+// 現在のユーザー情報を取得するエンドポイント
+app.get('/api/me', authenticateToken, async (req: Request, res: Response) => {
+  console.log(req);
+  try {
+    const userId = req.user?.userId;
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, name: true, email: true, memberNumber: true }
+    });
+
+    if (user) {
+      res.json(user);
+    } else {
+      res.status(404).json({ error: 'User not found' });
+    }
+  } catch (error) {
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
 app.post('/login', async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;

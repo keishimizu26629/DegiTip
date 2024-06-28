@@ -9,6 +9,7 @@ interface User {
   id: number;
   name: string;
   email: string;
+  memberNumber: string;
 }
 
 export default function ProfilePage() {
@@ -16,26 +17,38 @@ export default function ProfilePage() {
   const router = useRouter();
 
   useEffect(() => {
-    const token = Cookies.get('token');
-    const userStr = Cookies.get('user');
+    const fetchUserData = async () => {
+      const token = Cookies.get('token');
 
-    if (!token || !userStr) {
-      router.push('/login');
-      return;
-    }
+      if (!token) {
+        router.push('/login');
+        return;
+      }
 
-    try {
-      const userData = JSON.parse(userStr);
-      setUser(userData);
-    } catch (error) {
-      console.error('Error parsing user data:', error);
-      router.push('/login');
-    }
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/me`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch user data');
+        }
+
+        const userData = await response.json();
+        setUser(userData);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        router.push('/login');
+      }
+    };
+
+    fetchUserData();
   }, [router]);
 
   const handleLogout = () => {
     Cookies.remove('token');
-    Cookies.remove('user');
     router.push('/login');
   };
 
