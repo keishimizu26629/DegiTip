@@ -26,22 +26,21 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-
+      
       if (!response.ok) {
         throw new Error('Failed to authenticate');
       }
 
       const data = await response.json();
       Cookies.set('token', data.token, { expires: 7 }); // 7 days expiry
-      Cookies.set('user', JSON.stringify(data.user), { expires: 7 });
       console.log('Authentication successful, token and user info saved in cookies');
-      router.push('/profile');
+      router.push(`/profile/${data.user.memberNumber}`);
     } catch (error) {
       console.error('Authentication error:', error);
       setError('Authentication failed. Please check your credentials and try again.');
     }
   };
-  
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && <p className="text-red-500">{error}</p>}

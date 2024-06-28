@@ -11,7 +11,7 @@ const port = process.env.PORT || 3000;
 // CORS設定
 app.use(
   cors({
-    origin: 'http://localhost:3001', // フロントエンドのURL
+    origin: ['http://localhost:3001', 'http://127.0.0.1:3001'], // フロントエンドのURL
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     credentials: true,
   }),
