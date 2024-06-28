@@ -17,9 +17,10 @@ export default function RegisterPage() {
         <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
           <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
             <AuthForm type="register" />
-            <div className="mt-6 text-center">
+            <div className="mt-6 text-center text-gray-900">
+              Already have an account?　
               <Link href="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
-                Already have an account? Sign in
+                Sign in
               </Link>
             </div>
           </div>

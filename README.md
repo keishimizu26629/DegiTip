@@ -1,4 +1,4 @@
-# DegiTip
+# DegiTips
 ## フォルダ構造
 ```bash
 project-root/

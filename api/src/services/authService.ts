@@ -62,7 +62,15 @@ export async function loginUser(email: string, password: string) {
     expiresIn: '1d',
   });
 
-  return { token, user: { id: user.id, email: user.email, name: user.name } };
+  return {
+    token,
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name,
+      memberNumber: user.memberNumber
+    }
+  };
 }
 
 export async function verifyEmail(token: string) {
