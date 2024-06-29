@@ -40,7 +40,7 @@ export default function ProfilePage() {
       if (!token) return;
 
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/me`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/me`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }

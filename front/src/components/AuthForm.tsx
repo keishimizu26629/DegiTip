@@ -17,7 +17,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const endpoint = type === 'login' ? 'http://localhost:3000/login' : 'http://localhost:3000/register';
+    const endpoint = type === 'login' ? 'http://localhost:3000/api/auth/login' : 'http://localhost:3000/api/auth/register';
     const payload = type === 'login' ? { email, password } : { email, password, name };
 
     try {
@@ -26,7 +26,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      
+
       if (!response.ok) {
         throw new Error('Failed to authenticate');
       }
