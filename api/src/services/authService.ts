@@ -72,18 +72,3 @@ export async function loginUser(email: string, password: string) {
     }
   };
 }
-
-export async function verifyEmail(token: string) {
-  const user = await prisma.user.findUnique({ where: { emailVerifyToken: token } });
-
-  if (!user) {
-    throw new Error('Invalid token');
-  }
-
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { emailVerified: true, emailVerifyToken: null },
-  });
-
-  return { message: 'Email verified successfully' };
-}

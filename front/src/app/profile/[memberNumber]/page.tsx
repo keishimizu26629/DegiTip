@@ -4,14 +4,8 @@ import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Cookies from 'js-cookie';
-import Navbar from '../../../components/Navber';
-
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  memberNumber: string;
-}
+import Navbar from '../../../components/Navbar';
+import { User, Profile } from '../../../interfaces/User';
 
 export default function ProfilePage() {
   const [profileUser, setProfileUser] = useState<User | null>(null);
@@ -23,7 +17,9 @@ export default function ProfilePage() {
   useEffect(() => {
     const fetchProfileUser = async () => {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${memberNumber}`);
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/users/${memberNumber}`,
+        );
         if (!response.ok) {
           throw new Error('Failed to fetch profile data');
         }
@@ -40,10 +36,10 @@ export default function ProfilePage() {
       if (!token) return;
 
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/me`, {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/me`, {
           headers: {
-            'Authorization': `Bearer ${token}`
-          }
+            Authorization: `Bearer ${token}`,
+          },
         });
         if (!response.ok) {
           throw new Error('Failed to fetch current user data');
@@ -70,7 +66,7 @@ export default function ProfilePage() {
 
   return (
     <>
-      <Navbar isLoggedIn={!!currentUser} username={currentUser?.name} />
+      <Navbar isLoggedIn={!!currentUser} username={currentUser?.name || undefined} />
       <div className="max-w-2xl mx-auto mt-10 p-6 bg-white rounded-lg shadow-xl">
         <h1 className="text-3xl font-bold mb-6 text-gray-800">Profile</h1>
         <div className="space-y-4">
@@ -86,6 +82,19 @@ export default function ProfilePage() {
             <span className="text-gray-600 font-semibold w-32">Member Number:</span>
             <span className="text-gray-800">{profileUser.memberNumber}</span>
           </div>
+          {profileUser.profiles && profileUser.profiles.length > 0 && (
+            <div>
+              <h2 className="text-2xl font-bold mb-4 text-gray-800">Profiles</h2>
+              <ul>
+                {profileUser.profiles.map((profile: Profile) => (
+                  <li key={profile.id}>
+                    <h3 className="text-xl font-semibold">{profile.title}</h3>
+                    <p>{profile.content}</p>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
         {isOwnProfile && (
           <div className="mt-8">
