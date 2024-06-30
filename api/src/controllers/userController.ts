@@ -45,17 +45,22 @@ export async function getProfile(req: Request, res: Response) {
 }
 
 export async function updateProfile(req: Request, res: Response) {
-  const userId = req.user?.userId;
+  const userId = req.user?.userId; // authenticateToken ミドルウェアによって設定される
+  const updateData = req.body;
 
-  if (userId === undefined) {
-    return res.status(400).json({ error: 'User ID is missing' });
+  if (!userId) {
+    return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  const { name } = req.body;
   try {
-    const updatedUser = await userService.updateUserName(userId, name);
-    res.json({ name: updatedUser.name });
+    const updatedUser = await userService.updateUser(userId, updateData);
+    if (updatedUser) {
+      res.json(updatedUser);
+    } else {
+      res.status(404).json({ error: 'User not found' });
+    }
   } catch (error) {
+    console.error('Error updating profile:', error);
     res.status(500).json({ error: 'Failed to update profile' });
   }
 }

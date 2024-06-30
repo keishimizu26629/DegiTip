@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import ProfileForm from '../../components/ProfileForm';
+import { useParams, useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 
 interface User {
@@ -12,60 +11,56 @@ interface User {
   memberNumber: string;
 }
 
-export default function ProfilePage() {
+export default function EditProfilePage() {
   const [user, setUser] = useState<User | null>(null);
   const router = useRouter();
+  const params = useParams();
+  const memberNumber = params.memberNumber as string;
 
   useEffect(() => {
-    const fetchUserData = async () => {
-      const token = Cookies.get('token');
+    console.log('Edit page mounted, memberNumber:', memberNumber);
 
-      if (!token) {
-        router.push('/login');
-        return;
-      }
-
+    const checkAuth = async () => {
       try {
+        const token = Cookies.get('token');
+        if (!token) {
+          router.push('/login');
+          return;
+        }
+
         const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/me`, {
           headers: {
             'Authorization': `Bearer ${token}`
           }
         });
 
-        if (!response.ok) {
+        if (response.ok) {
+          const currentUser = await response.json();
+          if (currentUser.memberNumber !== memberNumber) {
+            router.push('/profile/' + currentUser.memberNumber);
+            return;
+          }
+          setUser(currentUser);
+        } else {
           throw new Error('Failed to fetch user data');
         }
-
-        const userData = await response.json();
-        setUser(userData);
       } catch (error) {
-        console.error('Error fetching user data:', error);
+        console.error('Error in EditProfilePage:', error);
         router.push('/login');
       }
     };
 
-    fetchUserData();
-  }, [router]);
-
-  const handleLogout = () => {
-    Cookies.remove('token');
-    router.push('/login');
-  };
+    checkAuth();
+  }, [router, memberNumber]);
 
   if (!user) {
     return <div>Loading...</div>;
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-4">Your Profile</h1>
-      <ProfileForm user={user} />
-      <button
-        onClick={handleLogout}
-        className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
-      >
-        Logout
-      </button>
+    <div>
+      <h1>Edit Profile</h1>
+      {/* 編集フォームのJSX */}
     </div>
   );
 }
