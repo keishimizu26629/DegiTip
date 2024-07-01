@@ -14,28 +14,40 @@ model User {
   password     String
   name         String?
   memberNumber String    @unique
-  occupation   String?
-  isPublic     Boolean   @default(true)
   emailVerified Boolean  @default(false)
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
-  profiles     Profile[]
+  profile      Profile?
 }
 
 model Profile {
+  id           Int       @id @default(autoincrement())
+  userId       Int       @unique
+  user         User      @relation(fields: [userId], references: [id])
+  avatarURL    String?
+  headerImageURL String?
+  displayName  String?
+  occupation   String?
+  isPublic     Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @default(now()) @updatedAt
+  extraProfiles ExtraProfile[]
+}
+
+model ExtraProfile {
   id           Int         @id @default(autoincrement())
-  userId       Int
-  user         User        @relation(fields: [userId], references: [id])
+  profileId    Int
+  profile      Profile     @relation(fields: [profileId], references: [id])
   title        String
   content      String
   contentType  ContentType @relation(fields: [contentTypeId], references: [id])
   contentTypeId Int
   createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
+  updatedAt    DateTime    @default(now()) @updatedAt
 }
 
 model ContentType {
   id               Int       @id @default(autoincrement())
   name             String    @unique
-  profiles         Profile[]
+  extraProfiles    ExtraProfile[]
 }
