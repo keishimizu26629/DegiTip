@@ -6,7 +6,8 @@ const router = express.Router();
 
 router.get('/', userController.getAllUsers);
 router.get('/me', authenticateToken, userController.getProfile);
-router.get('/:memberNumber', userController.getUser);
-router.put('/me', authenticateToken, userController.updateProfile);
+router.post('/me', authenticateToken, userController.updateProfile);
+router.get('/:memberNumber', userController.getUserByMemberNumber);
+router.put('/me', userController.updateProfilePost);
 
 export default router;
