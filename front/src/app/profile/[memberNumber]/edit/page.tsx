@@ -3,24 +3,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
-
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  memberNumber: string;
-}
-
-interface ContentType {
-  id: number;
-  name: string;
-}
-
-interface ProfileContent {
-  contentTypeId: number;
-  title: string;
-  content: string;
-}
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { firebaseApp } from '../../../../utils/firebase';
 
 export default function EditProfilePage() {
   const [user, setUser] = useState<User | null>(null);
