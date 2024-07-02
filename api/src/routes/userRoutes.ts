@@ -9,5 +9,7 @@ router.get('/me', authenticateToken, userController.getProfile);
 router.post('/me', authenticateToken, userController.updateProfile);
 router.get('/:memberNumber', userController.getUserByMemberNumber);
 router.put('/me', userController.updateProfilePost);
+router.post('/me/extra-profiles/delete', authenticateToken, userController.deleteExtraProfile);
+
 
 export default router;

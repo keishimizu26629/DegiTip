@@ -90,3 +90,21 @@ export const updateProfile = async (req: Request, res: Response) => {
     }
   }
 };
+
+export const deleteExtraProfile = async (req: Request, res: Response) => {
+  const userId = req.user?.userId; // authenticateToken ミドルウェアで設定されたユーザーID
+
+  if (typeof userId !== 'number') {
+    return res.status(400).json({ error: 'User ID is missing or invalid' });
+  }
+
+  const { extraProfileId } = req.body;
+
+  try {
+    await userService.deleteExtraProfile(userId, parseInt(extraProfileId));
+    res.status(204).send();
+  } catch (error) {
+    console.error('Error deleting extra profile:', error);
+    res.status(500).json({ error: 'Failed to delete extra profile' });
+  }
+};

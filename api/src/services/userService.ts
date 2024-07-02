@@ -151,3 +151,23 @@ export async function updateProfile(
     }
   }
 }
+
+export const deleteExtraProfile = async (userId: number, extraProfileId: number) => {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    include: { profile: true },
+  });
+
+  if (!user || !user.profile) {
+    throw new Error('User or profile not found');
+  }
+
+  await prisma.extraProfile.deleteMany({
+    where: {
+      id: extraProfileId,
+      profile: {
+        userId: userId,
+      },
+    },
+  });
+};
