@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { AuthCheck } from '../utils/auth';
+import { AuthCheck } from '../../utils/auth';
 import Logo from '../../components/Logo';
 import AuthForm from '../../components/AuthForm';
 
