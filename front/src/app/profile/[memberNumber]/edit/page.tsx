@@ -57,7 +57,10 @@ export default function EditProfilePage() {
     }
   };
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, type: 'avatar' | 'header') => {
+  const handleFileChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    type: 'avatar' | 'header',
+  ) => {
     const file = event.target.files?.[0];
     if (file) {
       if (type === 'avatar') {
@@ -68,7 +71,11 @@ export default function EditProfilePage() {
     }
   };
 
-  const handleExtraProfileChange = (index: number, field: keyof ExtraProfile, value: string | number) => {
+  const handleExtraProfileChange = (
+    index: number,
+    field: keyof ExtraProfile,
+    value: string | number,
+  ) => {
     if (profileUser) {
       const newExtraProfiles = [...profileUser.extraProfiles];
       newExtraProfiles[index] = { ...newExtraProfiles[index], [field]: value };
@@ -134,17 +141,18 @@ export default function EditProfilePage() {
     }
   };
 
-  const handleDeleteExtraProfile = async (index: number) => {
+  const handleDeleteExtraProfile = (index: number) => {
     if (profileUser) {
       const profileToDelete = profileUser.extraProfiles[index];
 
+      // IDがnullの場合、直接削除
       if (typeof profileToDelete.id === 'number') {
+        // 保存済みのプロフィールの場合、確認ポップアップを表示
+        setShowDeleteConfirm(index);
+      } else {
         // 未保存のプロフィールの場合、直接削除
         const newExtraProfiles = profileUser.extraProfiles.filter((_, i) => i !== index);
         setProfileUser({ ...profileUser, extraProfiles: newExtraProfiles });
-      } else {
-        // 保存済みのプロフィールの場合、確認ポップアップを表示
-        setShowDeleteConfirm(index);
       }
     }
   };
@@ -152,15 +160,20 @@ export default function EditProfilePage() {
   const confirmDelete = async (index: number) => {
     if (profileUser) {
       const profileToDelete = profileUser.extraProfiles[index];
-
+      console.log(profileToDelete.id);
       try {
         const token = Cookies.get('token');
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${memberNumber}/extra-profiles/${profileToDelete.id}`, {
-          method: 'DELETE',
-          headers: {
-            'Authorization': `Bearer ${token}`,
-          },
-        });
+        const response = await fetch(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/users/me/extra-profiles/delete`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${token}`,
+            },
+            body: JSON.stringify({ extraProfileId: profileToDelete.id }),
+          }
+        );
 
         if (!response.ok) {
           throw new Error('Failed to delete extra profile');
@@ -198,9 +211,24 @@ export default function EditProfilePage() {
             className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10 cursor-pointer"
             onClick={() => handleImageSelect('header')}
           >
-            <svg className="h-12 w-12 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+            <svg
+              className="h-12 w-12 text-white"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+              />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+              />
             </svg>
           </div>
           {headerFile || profileUser.headerImageUrl ? (
@@ -229,9 +257,24 @@ export default function EditProfilePage() {
             onClick={() => handleImageSelect('avatar')}
           >
             <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-10">
-              <svg className="h-8 w-8 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+              <svg
+                className="h-8 w-8 text-white"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+                />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+                />
               </svg>
             </div>
             {avatarFile || profileUser.avatarUrl ? (
@@ -276,7 +319,10 @@ export default function EditProfilePage() {
               <h2 className="text-2xl font-bold mb-6 text-gray-800">Extra Profiles</h2>
               <div className="space-y-4">
                 {profileUser.extraProfiles.map((profile, index) => (
-                  <div key={profile.id} className="flex items-center space-x-3 p-4 bg-white rounded-lg shadow-sm border border-gray-300">
+                  <div
+                    key={profile.id}
+                    className="flex items-center space-x-3 p-4 bg-white rounded-lg shadow-sm border border-gray-300"
+                  >
                     {profile.contentTypeId === 1 && <FaLink className="text-indigo-600" />}
                     {profile.contentTypeId === 2 && <FaInfo className="text-indigo-600" />}
                     {profile.contentTypeId === 3 && <FaInfo className="text-indigo-600" />}
@@ -297,13 +343,13 @@ export default function EditProfilePage() {
                         placeholder="Content"
                       />
                     </div>
-                      <button
-                        type="button"
-                        onClick={() => handleDeleteExtraProfile(index)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <FaTrash />
-                      </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteExtraProfile(index)}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <FaTrash />
+                    </button>
                   </div>
                 ))}
               </div>
@@ -329,7 +375,10 @@ export default function EditProfilePage() {
             </div>
 
             <div className="mt-12 flex justify-center">
-              <button type="submit" className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-md transition duration-300 ease-in-out">
+              <button
+                type="submit"
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-md transition duration-300 ease-in-out"
+              >
                 Save Changes
               </button>
             </div>
