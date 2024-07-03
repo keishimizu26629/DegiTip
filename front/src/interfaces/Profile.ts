@@ -1,5 +1,5 @@
 export interface ExtraProfile {
-  id: number;
+  id?: number;
   title: string;
   content: string;
   contentTypeId: number;
