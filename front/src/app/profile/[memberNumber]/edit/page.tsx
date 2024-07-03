@@ -42,7 +42,38 @@ export default function EditProfilePage() {
       }
     };
 
-    fetchProfileUser();
+    const fetchCurrentUser = async () => {
+      const token = Cookies.get('token');
+      if (!token) {
+        router.push(`/profile/${memberNumber}`);
+        return;
+      }
+
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/me`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch current user data');
+        }
+
+        const currentUserData = await response.json();
+
+        if (currentUserData.memberNumber !== memberNumber) {
+          router.push(`/profile/${currentUserData.memberNumber}`);
+        } else {
+          fetchProfileUser();
+        }
+      } catch (error) {
+        console.error('Error fetching current user data:', error);
+        router.push('/404');
+      }
+    };
+
+    fetchCurrentUser();
   }, [memberNumber, router]);
 
   const handleImageUpload = async (file: File, path: string) => {

@@ -2,8 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
-import Image from 'next/image';
 import Cookies from 'js-cookie';
 import Navbar from '../../../components/Navbar';
 import { UserProfile } from '../../../interfaces/Profile';
