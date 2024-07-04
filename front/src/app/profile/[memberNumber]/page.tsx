@@ -9,6 +9,7 @@ import Avatar from '../../../components/Profile/Avatar';
 import HeaderImage from '../../../components/Profile/HeaderImage';
 import Card from '../../../components/Profile/Card';
 import ProfileDetails from '../../../components/Profile/ProfileDetails';
+import { fetchProfileUser, fetchCurrentUser } from '../../../services/userService';
 
 const ProfilePage = () => {
   const [profileUser, setProfileUser] = useState<UserProfile | null>(null);
@@ -18,45 +19,25 @@ const ProfilePage = () => {
   const router = useRouter();
 
   useEffect(() => {
-    const fetchProfileUser = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/users/${memberNumber}`,
-        );
-        if (!response.ok) {
-          throw new Error('Failed to fetch profile data');
+        const memberNumberString = Array.isArray(memberNumber) ? memberNumber[0] : memberNumber;
+        const profileUser = await fetchProfileUser(memberNumberString);
+        setProfileUser(profileUser);
+
+        const token = Cookies.get('token');
+        if (token) {
+          const currentUser = await fetchCurrentUser(token);
+          setCurrentUser(currentUser);
+          setIsOwnProfile(currentUser.memberNumber === memberNumber);
         }
-        const userData = await response.json();
-        setProfileUser(userData);
       } catch (error) {
         console.error('Error fetching profile data:', error);
         router.push('/404');
       }
     };
 
-    const fetchCurrentUser = async () => {
-      const token = Cookies.get('token');
-      if (!token) return;
-
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/me`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (!response.ok) {
-          throw new Error('Failed to fetch current user data');
-        }
-        const userData = await response.json();
-        setCurrentUser(userData);
-        setIsOwnProfile(userData.memberNumber === memberNumber);
-      } catch (error) {
-        console.error('Error fetching current user data:', error);
-      }
-    };
-
-    fetchProfileUser();
-    fetchCurrentUser();
+    fetchData();
   }, [memberNumber, router]);
 
   if (!profileUser) {

@@ -11,6 +11,12 @@ import Avatar from '../../../../components/Profile/Avatar';
 import HeaderImage from '../../../../components/Profile/HeaderImage';
 import Card from '../../../../components/Profile/Card';
 import ProfileDetails from '../../../../components/Profile/ProfileDetails';
+import {
+  fetchCurrentUser,
+  fetchProfileUser,
+  updateProfileUser,
+  deleteExtraProfile,
+} from '../../../../services/userService';
 
 const storage = getStorage(firebaseApp);
 
@@ -26,54 +32,28 @@ export default function EditProfilePage() {
   const router = useRouter();
 
   useEffect(() => {
-    const fetchProfileUser = async () => {
+    const fetchData = async () => {
       try {
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/users/${memberNumber}`,
-        );
-        if (!response.ok) {
-          throw new Error('Failed to fetch profile data');
+        const token = Cookies.get('token');
+        if (!token) {
+          router.push(`/profile/${memberNumber}`);
+          return;
         }
-        const userData = await response.json();
-        setProfileUser(userData);
+
+        const currentUser = await fetchCurrentUser(token);
+        if (currentUser.memberNumber !== memberNumber) {
+          router.push(`/profile/${currentUser.memberNumber}`);
+        } else {
+          const profileUser = await fetchProfileUser(memberNumber);
+          setProfileUser(profileUser);
+        }
       } catch (error) {
         console.error('Error fetching profile data:', error);
         router.push('/404');
       }
     };
 
-    const fetchCurrentUser = async () => {
-      const token = Cookies.get('token');
-      if (!token) {
-        router.push(`/profile/${memberNumber}`);
-        return;
-      }
-
-      try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/me`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to fetch current user data');
-        }
-
-        const currentUserData = await response.json();
-
-        if (currentUserData.memberNumber !== memberNumber) {
-          router.push(`/profile/${currentUserData.memberNumber}`);
-        } else {
-          fetchProfileUser();
-        }
-      } catch (error) {
-        console.error('Error fetching current user data:', error);
-        router.push('/404');
-      }
-    };
-
-    fetchCurrentUser();
+    fetchData();
   }, [memberNumber, router]);
 
   const handleImageUpload = async (file: File, path: string) => {
@@ -151,11 +131,11 @@ export default function EditProfilePage() {
       }
 
       const updatedProfileUser = {
-        avatarURL,
-        headerImageURL,
-        displayName: profileUser?.displayName,
-        occupation: profileUser?.occupation,
-        isPublic: profileUser?.isPublic ?? false,
+        avatarURL: profileUser?.avatarUrl ?? undefined,
+        headerImageURL: profileUser?.headerImageUrl ?? undefined,
+        displayName: profileUser?.displayName ?? undefined,
+        occupation: profileUser?.occupation ?? undefined,
+        isPublic: Boolean(profileUser?.isPublic ?? false),
         ExtraProfile: profileUser?.extraProfiles.map((profile) => {
           if (profile.id) {
             return { ...profile };
@@ -165,19 +145,7 @@ export default function EditProfilePage() {
         }),
       };
 
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/me`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(updatedProfileUser),
-      });
-
-      if (!response.ok) {
-        throw new Error('Failed to update profile');
-      }
-
+      await updateProfileUser(token, updatedProfileUser);
       router.push(`/profile/${memberNumber}`);
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -200,25 +168,12 @@ export default function EditProfilePage() {
   const confirmDelete = async (index: number) => {
     if (profileUser) {
       const profileToDelete = profileUser.extraProfiles[index];
-      console.log(profileToDelete.id);
+      const token = Cookies.get('token');
+      if (!token) {
+        throw new Error('Token is undefind')
+      }
       try {
-        const token = Cookies.get('token');
-        const response = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/api/users/me/extra-profiles/delete`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ extraProfileId: profileToDelete.id }),
-          },
-        );
-
-        if (!response.ok) {
-          throw new Error('Failed to delete extra profile');
-        }
-
+        await deleteExtraProfile(token, profileToDelete.id!);
         const newExtraProfiles = profileUser.extraProfiles.filter((_, i) => i !== index);
         setProfileUser({ ...profileUser, extraProfiles: newExtraProfiles });
       } catch (error) {
