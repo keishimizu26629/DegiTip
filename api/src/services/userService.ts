@@ -59,6 +59,7 @@ export async function updateUserById(userId: number, updateData: any) {
     where: { id: userId },
     data: {
       emailVerified: updateData.emailVerified,
+      emailVerifyToken: updateData.emailVerifyToken
     },
   });
 
