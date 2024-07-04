@@ -1,5 +1,6 @@
 import { PrismaClient, Prisma } from '@prisma/client';
 import { generateUniqueMemberNumber } from '../utils/generateMemberNumber';
+import { generateVerifyToken } from '../utils/generateVertifyToken';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
@@ -9,6 +10,7 @@ export async function registerUser(email: string, password: string, name: string
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const memberNumber = await generateUniqueMemberNumber();
+    const emailVerifyToken = await generateVerifyToken();
 
     const user = await prisma.user.create({
       data: {
@@ -16,6 +18,7 @@ export async function registerUser(email: string, password: string, name: string
         password: hashedPassword,
         name,
         memberNumber,
+        emailVerifyToken
       },
     });
 
@@ -68,7 +71,22 @@ export async function loginUser(email: string, password: string) {
       id: user.id,
       email: user.email,
       name: user.name,
-      memberNumber: user.memberNumber
+      memberNumber: user.memberNumber,
+      emailVertifyToken: user.emailVerifyToken
     }
   };
+}
+
+export async function verifyEmail(token: string): Promise<{ message?: string }> {
+  const user = await prisma.user.findUnique({ where: { emailVerifyToken: token } });
+  if (!user) {
+    throw new Error('Invalid token');
+  }
+
+  await prisma.user.update({
+    where: { id: user.id },
+    data: { emailVerified: true },
+  });
+
+  return { message: 'Email verified successfully' };
 }
