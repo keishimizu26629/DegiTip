@@ -1,167 +1,266 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
+import Navbar from '../../../../components/Navbar';
+import { UserProfile, ExtraProfile } from '../../../../interfaces/Profile';
+import { getStorage, ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { firebaseApp } from '../../../../utils/firebase';
+import Avatar from '../../../../components/Profile/Avatar';
+import HeaderImage from '../../../../components/Profile/HeaderImage';
+import Card from '../../../../components/Profile/Card';
+import ProfileDetails from '../../../../components/Profile/ProfileDetails';
+import {
+  fetchCurrentUser,
+  fetchProfileUser,
+  updateProfileUser,
+  deleteExtraProfile,
+} from '../../../../services/userService';
 
-interface User {
-  id: number;
-  name: string;
-  email: string;
-  memberNumber: string;
-}
-
-interface ContentType {
-  id: number;
-  name: string;
-}
-
-interface ProfileContent {
-  contentTypeId: number;
-  title: string;
-  content: string;
-}
+const storage = getStorage(firebaseApp);
 
 export default function EditProfilePage() {
-  const [user, setUser] = useState<User | null>(null);
-  const [contentTypes, setContentTypes] = useState<ContentType[]>([]);
-  const [profileContents, setProfileContents] = useState<ProfileContent[]>([]);
+  const [profileUser, setProfileUser] = useState<UserProfile | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [headerFile, setHeaderFile] = useState<File | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<number | null>(null);
+  const [newContentType, setNewContentType] = useState<number>(1);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const headerInputRef = useRef<HTMLInputElement>(null);
+  const { memberNumber } = useParams();
   const router = useRouter();
-  const params = useParams();
-  const memberNumber = params.memberNumber as string;
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const fetchData = async () => {
       try {
         const token = Cookies.get('token');
         if (!token) {
-          router.push('/login');
+          router.push(`/profile/${memberNumber}`);
           return;
         }
 
-        const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/me`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        if (response.ok) {
-          const currentUser = await response.json();
-          if (currentUser.memberNumber !== memberNumber) {
-            router.push(`/profile/${currentUser.memberNumber}`);
-            return;
-          }
-          setUser(currentUser);
-
-          // ContentTypesを取得
-          const contentTypesResponse = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/api/content-types`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            },
-          );
-          if (contentTypesResponse.ok) {
-            const contentTypesData = await contentTypesResponse.json();
-            setContentTypes(contentTypesData);
-          }
+        const currentUser = await fetchCurrentUser(token);
+        if (currentUser.memberNumber !== memberNumber) {
+          router.push(`/profile/${currentUser.memberNumber}`);
         } else {
-          throw new Error('Failed to fetch user data');
+          const profileUser = await fetchProfileUser(memberNumber);
+          setProfileUser(profileUser);
         }
       } catch (error) {
-        console.error('Error in EditProfilePage:', error);
-        router.push('/login');
+        console.error('Error fetching profile data:', error);
+        router.push('/404');
       }
     };
 
-    checkAuth();
-  }, [router, memberNumber]);
+    fetchData();
+  }, [memberNumber, router]);
 
-  const addProfileContent = () => {
-    setProfileContents([...profileContents, { contentTypeId: 0, title: '', content: '' }]);
+  const handleImageUpload = async (file: File, path: string) => {
+    const storageRef = ref(storage, path);
+    await uploadBytes(storageRef, file);
+    return getDownloadURL(storageRef);
   };
 
-  const updateProfileContent = (
-    index: number,
-    field: keyof ProfileContent,
-    value: string | number,
-  ) => {
-    const updatedContents = [...profileContents];
-    updatedContents[index] = { ...updatedContents[index], [field]: value };
-    setProfileContents(updatedContents);
-  };
-
-  const saveProfile = async () => {
-    try {
-      const token = Cookies.get('token');
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/profile`, {
-        method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ profileContents }),
-      });
-
-      if (response.ok) {
-        alert('Profile updated successfully');
-        router.push(`/profile/${memberNumber}`);
-      } else {
-        throw new Error('Failed to update profile');
-      }
-    } catch (error) {
-      console.error('Error saving profile:', error);
-      alert('Failed to save profile');
+  const handleImageSelect = (type: 'avatar' | 'header') => {
+    if (type === 'avatar' && avatarInputRef.current) {
+      avatarInputRef.current.click();
+    } else if (type === 'header' && headerInputRef.current) {
+      headerInputRef.current.click();
     }
   };
 
-  if (!user) {
-    return <div>Loading...</div>;
+  const handleFileChange = (
+    event: React.ChangeEvent<HTMLInputElement>,
+    type: 'avatar' | 'header',
+  ) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      if (type === 'avatar') {
+        setAvatarFile(file);
+      } else {
+        setHeaderFile(file);
+      }
+    }
+  };
+
+  const handleExtraProfileChange = (
+    index: number,
+    field: keyof ExtraProfile,
+    value: string | number,
+  ) => {
+    if (profileUser) {
+      const newExtraProfiles = [...profileUser.extraProfiles];
+      newExtraProfiles[index] = { ...newExtraProfiles[index], [field]: value };
+      setProfileUser({ ...profileUser, extraProfiles: newExtraProfiles });
+    }
+  };
+
+  const addExtraProfile = () => {
+    if (profileUser) {
+      const newExtraProfile: ExtraProfile = {
+        title: '',
+        content: '',
+        contentTypeId: newContentType,
+      };
+      setProfileUser({
+        ...profileUser,
+        extraProfiles: [...profileUser.extraProfiles, newExtraProfile],
+      });
+    }
+  };
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    const token = Cookies.get('token');
+    if (!token) {
+      router.push('/login');
+      return;
+    }
+
+    try {
+      let avatarURL = profileUser?.avatarUrl;
+      let headerImageURL = profileUser?.headerImageUrl;
+
+      if (avatarFile) {
+        avatarURL = await handleImageUpload(avatarFile, `avatars/${memberNumber}`);
+      }
+
+      if (headerFile) {
+        headerImageURL = await handleImageUpload(headerFile, `headers/${memberNumber}`);
+      }
+
+      const updatedProfileUser = {
+        avatarURL: profileUser?.avatarUrl ?? undefined,
+        headerImageURL: profileUser?.headerImageUrl ?? undefined,
+        displayName: profileUser?.displayName ?? undefined,
+        occupation: profileUser?.occupation ?? undefined,
+        isPublic: Boolean(profileUser?.isPublic ?? false),
+        ExtraProfile: profileUser?.extraProfiles.map((profile) => {
+          if (profile.id) {
+            return { ...profile };
+          }
+          const { id, ...newProfile } = profile;
+          return newProfile;
+        }),
+      };
+
+      await updateProfileUser(token, updatedProfileUser);
+      router.push(`/profile/${memberNumber}`);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+    }
+  };
+
+  const handleDeleteExtraProfile = (index: number) => {
+    if (profileUser) {
+      const profileToDelete = profileUser.extraProfiles[index];
+
+      if (profileToDelete.id) {
+        setShowDeleteConfirm(index);
+      } else {
+        const newExtraProfiles = profileUser.extraProfiles.filter((_, i) => i !== index);
+        setProfileUser({ ...profileUser, extraProfiles: newExtraProfiles });
+      }
+    }
+  };
+
+  const confirmDelete = async (index: number) => {
+    if (profileUser) {
+      const profileToDelete = profileUser.extraProfiles[index];
+      const token = Cookies.get('token');
+      if (!token) {
+        throw new Error('Token is undefind')
+      }
+      try {
+        await deleteExtraProfile(token, profileToDelete.id!);
+        const newExtraProfiles = profileUser.extraProfiles.filter((_, i) => i !== index);
+        setProfileUser({ ...profileUser, extraProfiles: newExtraProfiles });
+      } catch (error) {
+        console.error('Error deleting extra profile:', error);
+      }
+    }
+    setShowDeleteConfirm(null);
+  };
+
+  if (!profileUser) {
+    return (
+      <div className="flex justify-center items-center h-screen bg-white">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-600"></div>
+      </div>
+    );
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Edit Profile</h1>
-      <div className="mb-4">
-        <p>Name: {user.name}</p>
-        <p>Email: {user.email}</p>
-      </div>
-      {profileContents.map((content, index) => (
-        <div key={index} className="mb-4 p-4 border rounded">
-          <select
-            value={content.contentTypeId}
-            onChange={(e) => updateProfileContent(index, 'contentTypeId', parseInt(e.target.value))}
-            className="mb-2 w-full p-2 border rounded"
-          >
-            <option value={0}>Select Content Type</option>
-            {contentTypes.map((type) => (
-              <option key={type.id} value={type.id}>
-                {type.name}
-              </option>
-            ))}
-          </select>
-          <input
-            type="text"
-            value={content.title}
-            onChange={(e) => updateProfileContent(index, 'title', e.target.value)}
-            placeholder="Title"
-            className="mb-2 w-full p-2 border rounded"
-          />
-          <textarea
-            value={content.content}
-            onChange={(e) => updateProfileContent(index, 'content', e.target.value)}
-            placeholder="Content"
-            className="w-full p-2 border rounded"
+    <div className="bg-white min-h-screen pt-16">
+      <Navbar
+        isLoggedIn={true}
+        avatarUrl={profileUser.avatarUrl}
+        memberNumber={profileUser.memberNumber}
+      />
+      <Card>
+        <HeaderImage
+          src={headerFile ? URL.createObjectURL(headerFile) : profileUser.headerImageUrl!}
+          onClick={() => handleImageSelect('header')}
+          inputRef={headerInputRef}
+          onChange={(e) => handleFileChange(e, 'header')}
+        />
+        <div className="relative -mt-20 px-6">
+          <Avatar
+            src={avatarFile ? URL.createObjectURL(avatarFile) : profileUser.avatarUrl!}
+            onClick={() => handleImageSelect('avatar')}
+            inputRef={avatarInputRef}
+            onChange={(e) => handleFileChange(e, 'avatar')}
           />
         </div>
-      ))}
-      <button onClick={addProfileContent} className="bg-blue-500 text-white p-2 rounded mb-4">
-        Add Content
-      </button>
-      <button onClick={saveProfile} className="bg-green-500 text-white p-2 rounded">
-        Save Profile
-      </button>
+
+        <form onSubmit={handleSubmit}>
+          <ProfileDetails
+            profileUser={{ ...profileUser, occupation: profileUser.occupation }}
+            isOwnProfile={true}
+            isEditable={true}
+            handleExtraProfileChange={handleExtraProfileChange}
+            handleDeleteExtraProfile={handleDeleteExtraProfile}
+            addExtraProfile={addExtraProfile}
+            newContentType={newContentType}
+            setNewContentType={setNewContentType}
+            onDisplayNameChange={(value) => setProfileUser({ ...profileUser, displayName: value })}
+            onOccupationChange={(value) => setProfileUser({ ...profileUser, occupation: value })}
+            onIsPublicChange={(value) => setProfileUser({ ...profileUser, isPublic: value })}
+          />
+
+          <div className="mb-8 flex justify-center">
+            <button
+              type="submit"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-md transition duration-300 ease-in-out"
+            >
+              Save Changes
+            </button>
+          </div>
+        </form>
+
+        {showDeleteConfirm !== null && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white p-6 rounded-lg shadow-xl">
+              <p className="mb-4">Are you sure you want to delete this extra profile?</p>
+              <div className="flex justify-end space-x-2">
+                <button
+                  onClick={() => setShowDeleteConfirm(null)}
+                  className="px-4 py-2 bg-gray-300 rounded-md hover:bg-gray-400"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => confirmDelete(showDeleteConfirm)}
+                  className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </Card>
     </div>
   );
 }
