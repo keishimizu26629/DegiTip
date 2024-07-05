@@ -22,6 +22,18 @@ export async function registerUser(email: string, password: string, name: string
       },
     });
 
+    // Profileの自動生成
+    await prisma.profile.create({
+      data: {
+        userId: user.id,
+        avatarURL: '', // デフォルト値
+        headerImageURL: '', // デフォルト値
+        displayName: '', // デフォルト値
+        occupation: '', // デフォルト値
+        isPublic: true, // デフォルト値
+      },
+    });
+
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET as string, {
       expiresIn: '1d',
     });
