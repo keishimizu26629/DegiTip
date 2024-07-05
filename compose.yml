@@ -8,6 +8,7 @@ services:
     environment:
       JWT_SECRET: ${JWT_SECRET}
       DATABASE_URL: ${DATABASE_URL}
+      API_COMPILE_SECRET_KEY: ${API_COMPILE_SECRET_KEY}
     volumes:
       - ./api:/usr/src/app
       - ./api/prisma:/usr/src/app/prisma
