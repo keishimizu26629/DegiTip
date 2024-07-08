@@ -34,7 +34,7 @@ const Navbar: React.FC<NavbarProps> = ({ isLoggedIn, avatarUrl, memberNumber }) 
     <nav className="bg-white shadow-md fixed top-0 left-0 right-0 z-50">
       <div className="container mx-auto px-4 h-16 flex justify-between items-center">
         <Link href="/" className="text-indigo-600 text-2xl font-bold">
-          DegiTips
+          DigiTips
         </Link>
         <div className="flex items-center">
           {isLoggedIn ? (
