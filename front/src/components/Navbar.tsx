@@ -30,6 +30,16 @@ const Navbar: React.FC<NavbarProps> = ({ isLoggedIn, avatarUrl, memberNumber }) 
     };
   }, []);
 
+  const redirectToLogin = () => {
+    const currentUrl = window.location.href;
+    router.push(`/login?redirect=${encodeURIComponent(currentUrl)}`);
+  };
+
+  const redirectToRegister = () => {
+    const currentUrl = window.location.href;
+    router.push(`/register?redirect=${encodeURIComponent(currentUrl)}`);
+  };
+
   return (
     <nav className="bg-white shadow-md fixed top-0 left-0 right-0 z-50">
       <div className="container mx-auto px-4 h-16 flex justify-between items-center">
@@ -80,12 +90,12 @@ const Navbar: React.FC<NavbarProps> = ({ isLoggedIn, avatarUrl, memberNumber }) 
             </div>
           ) : (
             <>
-              <Link href="/login" className="text-indigo-600 hover:text-indigo-800 mr-4">
+              <button onClick={redirectToLogin} className="text-indigo-600 hover:text-indigo-800 mr-4">
                 Login
-              </Link>
-              <Link href="/register" className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition duration-300">
+              </button>
+              <button onClick={redirectToRegister} className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700 transition duration-300">
                 Register
-              </Link>
+              </button>
             </>
           )}
         </div>
