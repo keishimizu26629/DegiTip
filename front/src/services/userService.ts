@@ -15,10 +15,6 @@ export async function fetchCurrentUser(token: string): Promise<UserProfile> {
     },
   });
 
-  if (!response.ok) {
-    throw new Error('Failed to fetch current user data');
-  }
-
   return await response.json();
 }
 
@@ -31,7 +27,7 @@ export async function updateProfileUser(
     occupation?: string;
     isPublic?: boolean;
     ExtraProfile?: ExtraProfile[];
-  }
+  },
 ): Promise<void> {
   const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/me`, {
     method: 'POST',
@@ -48,18 +44,19 @@ export async function updateProfileUser(
 }
 
 export async function deleteExtraProfile(token: string, extraProfileId: number): Promise<void> {
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/me/extra-profiles/delete`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+  const response = await fetch(
+    `${process.env.NEXT_PUBLIC_API_URL}/api/users/me/extra-profiles/delete`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ extraProfileId }),
     },
-    body: JSON.stringify({ extraProfileId }),
-  });
+  );
 
   if (!response.ok) {
     throw new Error('Failed to delete extra profile');
   }
 }
-
-
