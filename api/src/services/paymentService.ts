@@ -30,26 +30,35 @@ interface PaymentDetailsResponse {
   data?: any;
 }
 
-export async function createPaymentQRCode(amount: number, orderId: string, description: string): Promise<any> {
+export async function createPaymentQRCode(
+  amount: number,
+  orderId: string,
+  description: string,
+  memberNumber: string,
+): Promise<any> {
   const payload = {
     merchantPaymentId: orderId,
     amount: {
       amount,
-      currency: "JPY"
+      currency: 'JPY',
     },
-    codeType: "ORDER_QR",
+    codeType: 'ORDER_QR',
     orderDescription: description,
     isAuthorization: false,
-    redirectUrl: `${process.env.FRONTEND_URL}/payment/complete`,
-    redirectType: "WEB_LINK",
+    redirectUrl: `${process.env.FRONTEND_URL}/payment/complete/${memberNumber}`,
+    redirectType: 'WEB_LINK',
   };
 
   return new Promise((resolve, reject) => {
     PAYPAY.QRCodeCreate(payload, (response) => {
-      if ('BODY' in response && response.BODY && (response.BODY as QRCodeCreateResponse).resultInfo) {
+      if (
+        'BODY' in response &&
+        response.BODY &&
+        (response.BODY as QRCodeCreateResponse).resultInfo
+      ) {
         const responseBody = response.BODY as QRCodeCreateResponse;
 
-        if (responseBody.resultInfo.code === "SUCCESS") {
+        if (responseBody.resultInfo.code === 'SUCCESS') {
           resolve(responseBody.data);
         } else {
           reject(new Error(responseBody.resultInfo.message));
@@ -66,10 +75,14 @@ export async function createPaymentQRCode(amount: number, orderId: string, descr
 export async function getPaymentDetails(merchantPaymentId: (string | number)[]) {
   try {
     const response = await PAYPAY.GetPaymentDetails(merchantPaymentId);
-    if ('BODY' in response && response.BODY && (response.BODY as PaymentDetailsResponse).resultInfo) {
+    if (
+      'BODY' in response &&
+      response.BODY &&
+      (response.BODY as PaymentDetailsResponse).resultInfo
+    ) {
       const responseBody = response.BODY as PaymentDetailsResponse;
 
-      if (responseBody.resultInfo.code === "SUCCESS") {
+      if (responseBody.resultInfo.code === 'SUCCESS') {
         return responseBody.data;
       } else {
         throw new Error(responseBody.resultInfo.message);
@@ -80,7 +93,7 @@ export async function getPaymentDetails(merchantPaymentId: (string | number)[]) 
       throw new Error('Unexpected response format');
     }
   } catch (error) {
-    console.error("Error getting payment details:", error);
+    console.error('Error getting payment details:', error);
     throw error;
   }
 }

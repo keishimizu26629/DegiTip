@@ -3,11 +3,11 @@ import * as paymentService from '../services/paymentService';
 
 export async function createPayment(req: Request, res: Response) {
   try {
-    const { amount, recipientId } = req.body;
+    const { amount, recipientId, memberNumber } = req.body;
     const orderId = `order_${Date.now()}_${recipientId}`;
     const description = `Payment to user ${recipientId}`;
 
-    const paymentData = await paymentService.createPaymentQRCode(amount, orderId, description);
+    const paymentData = await paymentService.createPaymentQRCode(amount, orderId, description, memberNumber);
     res.status(200).json(paymentData);
   } catch (error) {
     console.error('Error creating payment:', error);
