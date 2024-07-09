@@ -16,4 +16,6 @@ export interface UserProfile {
   avatarUrl: string | null;
   headerImageUrl: string | null;
   extraProfiles: ExtraProfile[];
+  error: string;
+  details: string;
 }

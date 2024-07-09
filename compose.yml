@@ -12,6 +12,7 @@ services:
       PAYPAY_API_KEY: ${PAYPAY_API_KEY}
       PAYPAY_API_SECRET: ${PAYPAY_API_SECRET}
       PAYPAY_MERCHANT_ID: ${PAYPAY_MERCHANT_ID}
+      FRONTEND_URL: http://localhost:3001
     volumes:
       - ./api:/usr/src/app
       - ./api/prisma:/usr/src/app/prisma

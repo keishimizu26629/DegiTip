@@ -1,9 +1,15 @@
+'use client';
+
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { AuthCheck } from '../../utils/auth';
 import Logo from '../../components/Logo';
 import AuthForm from '../../components/AuthForm';
 
 export default function RegisterPage() {
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get('redirect') || '/profile';
+
   return (
     <AuthCheck>
       <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -16,10 +22,10 @@ export default function RegisterPage() {
 
         <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
           <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-            <AuthForm type="register" />
+            <AuthForm type="register" redirectUrl={redirectUrl} />
             <div className="mt-6 text-center text-gray-900">
               Already have an account?　
-              <Link href="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+              <Link href={`/login?redirect=${encodeURIComponent(redirectUrl)}`} className="font-medium text-indigo-600 hover:text-indigo-500">
                 Sign in
               </Link>
             </div>

@@ -6,9 +6,10 @@ import Cookies from 'js-cookie';
 
 interface AuthFormProps {
   type: 'login' | 'register';
+  redirectUrl: string;
 }
 
-const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
+const AuthForm: React.FC<AuthFormProps> = ({ type, redirectUrl }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -17,7 +18,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const endpoint = type === 'login' ? 'http://localhost:3000/api/auth/login' : 'http://localhost:3000/api/auth/register';
+    const endpoint = type === 'login' ? `${process.env.NEXT_PUBLIC_API_URL}/api/auth/login` : `${process.env.NEXT_PUBLIC_API_URL}/api/auth/register`;
     const payload = type === 'login' ? { email, password } : { email, password, name };
 
     try {
@@ -34,7 +35,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ type }) => {
       const data = await response.json();
       Cookies.set('token', data.token, { expires: 7 }); // 7 days expiry
       console.log('Authentication successful, token and user info saved in cookies');
-      router.push(`/profile/${data.user.memberNumber}`);
+      router.push(redirectUrl);
     } catch (error) {
       console.error('Authentication error:', error);
       setError('Authentication failed. Please check your credentials and try again.');
