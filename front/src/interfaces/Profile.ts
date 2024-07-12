@@ -1,8 +1,11 @@
 export interface ExtraProfile {
   id?: number;
+  profileId?: number;
   title: string;
   content: string;
   contentTypeId: number;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface UserProfile {
@@ -16,6 +19,6 @@ export interface UserProfile {
   avatarUrl: string | null;
   headerImageUrl: string | null;
   extraProfiles: ExtraProfile[];
-  error: string;
-  details: string;
+  error?: string;
+  details?: string;
 }

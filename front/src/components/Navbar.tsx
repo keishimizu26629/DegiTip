@@ -74,7 +74,7 @@ const Navbar: React.FC<NavbarProps> = ({ isLoggedIn, avatarUrl, memberNumber }) 
                     My Profile
                   </Link>
                   <Link
-                    href={`/profile/${memberNumber}/edit`}
+                    href={`/profile/${memberNumber}/settings`}
                     className="block px-4 py-2 text-sm text-gray-700 hover:bg-indigo-50"
                   >
                     Settings
