@@ -109,3 +109,28 @@ export const deleteExtraProfile = async (req: Request, res: Response) => {
     res.status(500).json({ error: 'Failed to delete extra profile' });
   }
 };
+
+export async function changePassword(req: Request, res: Response) {
+  try {
+    const userId = req.user?.userId; // authenticateTokenミドルウェアでセットされたユーザーID
+    const { currentPassword, newPassword, confirmNewPassword } = req.body;
+
+    if (newPassword !== confirmNewPassword) {
+      return res.status(400).json({ success: false, message: 'New passwords do not match' });
+    }
+
+    const result = await userService.changePassword(userId!, currentPassword, newPassword);
+
+    if (result.success) {
+      res.status(200).json(result);
+    } else {
+      res.status(400).json(result);
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      res.status(500).json({ success: false, message: error.message });
+    } else {
+      res.status(500).json({ success: false, message: 'An unexpected error occurred' });
+    }
+  }
+}

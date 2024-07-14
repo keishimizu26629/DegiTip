@@ -10,5 +10,6 @@ router.post('/me', authenticateToken, userController.updateProfile);
 router.get('/:memberNumber', userController.getUserByMemberNumber);
 router.put('/me', userController.updateProfilePost);
 router.post('/me/extra-profiles/delete', authenticateToken, userController.deleteExtraProfile);
+router.post('/change-password', authenticateToken, userController.changePassword);
 
 export default router;

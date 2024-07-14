@@ -137,7 +137,7 @@ export default function UserSettingsPage() {
 
         <div className="mb-8">
           <h2 className="text-2xl font-bold mb-4">Change Password</h2>
-          <Link href="/settings/change-password" className="text-indigo-600 hover:text-indigo-800">
+          <Link href={`settings/change-password`} className="text-indigo-600 hover:text-indigo-800">
             Change Password
           </Link>
         </div>
