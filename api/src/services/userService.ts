@@ -1,4 +1,5 @@
 import { PrismaClient, Prisma } from '@prisma/client';
+import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
@@ -172,3 +173,26 @@ export const deleteExtraProfile = async (userId: number, extraProfileId: number)
     },
   });
 };
+
+export async function changePassword(userId: number, currentPassword: string, newPassword: string): Promise<{ success: boolean; message: string }> {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+
+  if (!user) {
+    return { success: false, message: 'User not found' };
+  }
+
+  const isPasswordValid = await bcrypt.compare(currentPassword, user.password);
+
+  if (!isPasswordValid) {
+    return { success: false, message: 'Current password is incorrect' };
+  }
+
+  const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { password: hashedNewPassword },
+  });
+
+  return { success: true, message: 'Password changed successfully' };
+}
