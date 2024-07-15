@@ -44,6 +44,7 @@ export async function updateProfileUser(
 }
 
 export async function deleteExtraProfile(token: string, extraProfileId: number): Promise<void> {
+  console.log(token);
   const response = await fetch(
     `${process.env.NEXT_PUBLIC_API_URL}/api/users/me/extra-profiles/delete`,
     {
@@ -58,5 +59,50 @@ export async function deleteExtraProfile(token: string, extraProfileId: number):
 
   if (!response.ok) {
     throw new Error('Failed to delete extra profile');
+  }
+}
+
+export async function changePassword(
+  token: string,
+  currentPassword: string,
+  newPassword: string,
+  confirmNewPassword: string
+): Promise<{ success: boolean; message: string }> {
+  try {
+    const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/change-password`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        currentPassword,
+        newPassword,
+        confirmNewPassword
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to change password');
+    }
+
+    return {
+      success: true,
+      message: data.message || 'Password changed successfully'
+    };
+  } catch (error) {
+    if (error instanceof Error) {
+      return {
+        success: false,
+        message: error.message
+      };
+    } else {
+      return {
+        success: false,
+        message: 'An unexpected error occurred'
+      };
+    }
   }
 }

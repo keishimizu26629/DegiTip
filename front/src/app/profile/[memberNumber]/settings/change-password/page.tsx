@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 import Navbar from '../../../../../components/Navbar';
-import { updatePassword } from '../../../../../services/mockUserService';
+import { changePassword } from '../../../../../services/userService';
 
 export default function ChangePasswordPage() {
   const [currentPassword, setCurrentPassword] = useState('');
@@ -27,9 +27,13 @@ export default function ChangePasswordPage() {
     }
 
     try {
-      await updatePassword(token, currentPassword, newPassword);
-      alert('Password updated successfully');
-      router.push('/settings');
+      const result = await changePassword(token, currentPassword, newPassword, confirmPassword);
+      if (result.success) {
+        alert(result.message);
+        router.push('/settings');
+      } else {
+        setError(result.message);
+      }
     } catch (error) {
       console.error('Error updating password:', error);
       setError('Failed to update password');
