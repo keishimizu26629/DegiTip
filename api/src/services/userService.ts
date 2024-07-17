@@ -31,8 +31,8 @@ export async function getUserByMemberNumber(memberNumber: string) {
     isPublic: user.profile.isPublic,
     memberNumber: user.memberNumber,
     occupation: user.profile.occupation,
-    avatarUrl: user.profile.avatarURL,
-    headerImageUrl: user.profile.headerImageURL,
+    avatarUrl: user.profile.avatarUrl,
+    headerImageUrl: user.profile.headerImageUrl,
     extraProfiles: user.profile.extraProfiles.map((ep) => ({
       id: ep.id,
       title: ep.title,
@@ -49,6 +49,34 @@ export async function getUserById(userId: number) {
       profile: {
         include: {
           extraProfiles: true,
+        },
+      },
+    },
+  });
+}
+
+export async function getUserSettings(userId: number) {
+  return prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      memberNumber: true,
+      paymentMethods: {
+        select: {
+          id: true,
+          paymentTypeId: true,
+          key: true,
+          secret: true,
+          merchantId: true,
+          paymentType: {
+            select: {
+              id: true,
+              name: true,
+              enabled: true,
+            },
+          },
         },
       },
     },

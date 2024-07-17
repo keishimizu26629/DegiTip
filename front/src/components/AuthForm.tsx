@@ -9,6 +9,17 @@ interface AuthFormProps {
   redirectUrl: string;
 }
 
+interface AuthResponse {
+  token: string;
+  user: {
+    id: number;
+    email: string;
+    name: string;
+    memberNumber: string;
+    emailVertifyToken: string | null;
+  }
+}
+
 const AuthForm: React.FC<AuthFormProps> = ({ type, redirectUrl }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -31,11 +42,12 @@ const AuthForm: React.FC<AuthFormProps> = ({ type, redirectUrl }) => {
       if (!response.ok) {
         throw new Error('Failed to authenticate');
       }
-
-      const data = await response.json();
+      const data: AuthResponse = await response.json();
       Cookies.set('token', data.token, { expires: 7 }); // 7 days expiry
+      Cookies.set('user', JSON.stringify(data.user), { expires: 7 }); // Store user info in cookies
       console.log('Authentication successful, token and user info saved in cookies');
-      router.push(redirectUrl);
+      // Redirect to the user's profile page
+      router.push(`/profile/${data.user.memberNumber}`);
     } catch (error) {
       console.error('Authentication error:', error);
       setError('Authentication failed. Please check your credentials and try again.');

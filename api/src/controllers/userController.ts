@@ -51,6 +51,26 @@ export async function getProfile(req: Request, res: Response) {
   }
 }
 
+export async function getUserSettings(req: Request, res: Response) {
+  const userId = req.user?.userId;
+
+  if (typeof userId !== 'number') {
+    return res.status(400).json({ error: 'User ID is missing or invalid' });
+  }
+
+  try {
+    const user = await userService.getUserSettings(userId);
+    if (user) {
+      res.json(user);
+    } else {
+      res.status(404).json({ error: 'User not found' });
+    }
+  } catch (error) {
+    console.error('Error fetching user profile:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
 export async function updateProfilePost(req: Request, res: Response) {
   const { id, ...updateData } = req.body;
   if (typeof id !== 'number') {
