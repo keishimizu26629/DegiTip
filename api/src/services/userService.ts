@@ -70,8 +70,8 @@ export async function updateUserById(userId: number, updateData: any) {
 export async function updateProfile(
   userId: number,
   profileData: {
-    avatarURL?: string;
-    headerImageURL?: string;
+    avatarUrl?: string;
+    headerImageUrl?: string;
     displayName?: string;
     occupation?: string;
     isPublic: boolean;
@@ -94,8 +94,8 @@ export async function updateProfile(
         profile: {
           upsert: {
             create: {
-              avatarURL: profileData.avatarURL,
-              headerImageURL: profileData.headerImageURL,
+              avatarUrl: profileData.avatarUrl,
+              headerImageUrl: profileData.headerImageUrl,
               displayName: profileData.displayName,
               occupation: profileData.occupation,
               isPublic: profileData.isPublic,
@@ -108,8 +108,8 @@ export async function updateProfile(
               },
             },
             update: {
-              avatarURL: profileData.avatarURL,
-              headerImageURL: profileData.headerImageURL,
+              avatarUrl: profileData.avatarUrl,
+              headerImageUrl: profileData.headerImageUrl,
               displayName: profileData.displayName,
               occupation: profileData.occupation,
               isPublic: profileData.isPublic,

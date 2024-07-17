@@ -52,8 +52,7 @@ export async function getProfile(req: Request, res: Response) {
 }
 
 export async function updateProfilePost(req: Request, res: Response) {
-  const { id, ...updateData } = req.body; // リクエストボディからIDと更新データを取得
-
+  const { id, ...updateData } = req.body;
   if (typeof id !== 'number') {
     return res.status(400).json({ error: 'User ID is required and must be a number' });
   }
@@ -71,9 +70,9 @@ export async function updateProfilePost(req: Request, res: Response) {
   }
 }
 
+/// プロフィールの情報を更新するメソッド
 export const updateProfile = async (req: Request, res: Response) => {
-  const userId = req.user?.userId; // authenticateToken ミドルウェアで設定されたユーザーID
-
+  const userId = req.user?.userId;
   if (typeof userId !== 'number') {
     return res.status(400).json({ error: 'User ID is missing or invalid' });
   }
@@ -93,8 +92,7 @@ export const updateProfile = async (req: Request, res: Response) => {
 };
 
 export const deleteExtraProfile = async (req: Request, res: Response) => {
-  const userId = req.user?.userId; // authenticateToken ミドルウェアで設定されたユーザーID
-
+  const userId = req.user?.userId;
   if (typeof userId !== 'number') {
     return res.status(400).json({ error: 'User ID is missing or invalid' });
   }
@@ -112,7 +110,7 @@ export const deleteExtraProfile = async (req: Request, res: Response) => {
 
 export async function changePassword(req: Request, res: Response) {
   try {
-    const userId = req.user?.userId; // authenticateTokenミドルウェアでセットされたユーザーID
+    const userId = req.user?.userId;
     const { currentPassword, newPassword, confirmNewPassword } = req.body;
 
     if (newPassword !== confirmNewPassword) {

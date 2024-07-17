@@ -21,8 +21,8 @@ export async function fetchCurrentUser(token: string): Promise<UserProfile> {
 export async function updateProfileUser(
   token: string,
   updatedProfileUser: {
-    avatarURL?: string;
-    headerImageURL?: string;
+    avatarUrl?: string;
+    headerImageUrl?: string;
     displayName?: string;
     occupation?: string;
     isPublic?: boolean;
