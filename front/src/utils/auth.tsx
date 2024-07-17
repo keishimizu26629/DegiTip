@@ -15,7 +15,11 @@ export function AuthCheck({ children }: { children: React.ReactNode }) {
         const token = Cookies.get('token');
         if (token) {
           const currentUser = await fetchCurrentUser(token);
-          router.push(`/profile/${currentUser.memberNumber}`);
+          if (currentUser.memberNumber) {
+            router.push(`/profile/${currentUser.memberNumber}`);
+          } else {
+            Cookies.remove('token');
+          }
         }
       } catch (error) {
         Cookies.remove('token');

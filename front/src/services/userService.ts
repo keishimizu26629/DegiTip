@@ -1,4 +1,5 @@
 import { UserProfile, ExtraProfile } from '../interfaces/Profile';
+import { decrypt } from '../utils/cryptApiKey';
 
 export async function fetchProfileUser(memberNumber: string): Promise<UserProfile> {
   const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/${memberNumber}`);
@@ -21,8 +22,8 @@ export async function fetchCurrentUser(token: string): Promise<UserProfile> {
 export async function updateProfileUser(
   token: string,
   updatedProfileUser: {
-    avatarURL?: string;
-    headerImageURL?: string;
+    avatarUrl?: string;
+    headerImageUrl?: string;
     displayName?: string;
     occupation?: string;
     isPublic?: boolean;
@@ -60,6 +61,34 @@ export async function deleteExtraProfile(token: string, extraProfileId: number):
   if (!response.ok) {
     throw new Error('Failed to delete extra profile');
   }
+}
+export async function getUserSettings(token: string): Promise<UserSettings> {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/settings`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`
+    },
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Failed to fetch user settings');
+  }
+
+  const data = await response.json();
+
+  // Decrypt payment method information
+  if (data.paymentMethods) {
+    data.paymentMethods = data.paymentMethods.map((method: PaymentMethod) => ({
+      ...method,
+      key: method.key ? decrypt(method.key) : null,
+      secret: method.secret ? decrypt(method.secret) : null,
+      merchantId: method.merchantId ? decrypt(method.merchantId) : null,
+    }));
+  }
+
+  return data;
 }
 
 export async function changePassword(

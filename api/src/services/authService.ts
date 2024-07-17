@@ -18,7 +18,7 @@ export async function registerUser(email: string, password: string, name: string
         password: hashedPassword,
         name,
         memberNumber,
-        emailVerifyToken
+        emailVerifyToken,
       },
     });
 
@@ -26,8 +26,8 @@ export async function registerUser(email: string, password: string, name: string
     await prisma.profile.create({
       data: {
         userId: user.id,
-        avatarURL: '', // デフォルト値
-        headerImageURL: '', // デフォルト値
+        avatarUrl: '', // デフォルト値
+        headerImageUrl: '', // デフォルト値
         displayName: '', // デフォルト値
         occupation: '', // デフォルト値
         isPublic: true, // デフォルト値
@@ -84,8 +84,8 @@ export async function loginUser(email: string, password: string) {
       email: user.email,
       name: user.name,
       memberNumber: user.memberNumber,
-      emailVertifyToken: user.emailVerifyToken
-    }
+      emailVertifyToken: user.emailVerifyToken,
+    },
   };
 }
 

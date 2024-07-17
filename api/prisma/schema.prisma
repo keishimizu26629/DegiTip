@@ -9,46 +9,65 @@ datasource db {
 }
 
 model User {
-  id                      Int       @id @default(autoincrement())
-  email                   String    @unique
-  password                String
-  name                    String?
-  memberNumber            String    @unique
-  emailVerified           Boolean   @default(false)
-  emailVerifyToken        String?    @unique
-  createdAt               DateTime  @default(now())
-  updatedAt               DateTime  @updatedAt
-  profile                 Profile?
+  id                Int             @id @default(autoincrement())
+  email             String          @unique
+  password          String
+  name              String?
+  memberNumber      String          @unique
+  emailVerified     Boolean         @default(false)
+  emailVerifyToken  String?         @unique
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  profile           Profile?
+  paymentMethods    PaymentMethod[]
 }
 
 model Profile {
-  id           Int       @id @default(autoincrement())
-  userId       Int       @unique
-  user         User      @relation(fields: [userId], references: [id])
-  avatarURL    String?
-  headerImageURL String?
-  displayName  String?
-  occupation   String?
-  isPublic     Boolean   @default(true)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @default(now()) @updatedAt
-  extraProfiles ExtraProfile[]
+  id              Int             @id @default(autoincrement())
+  userId          Int             @unique
+  user            User            @relation(fields: [userId], references: [id])
+  avatarUrl       String?
+  headerImageUrl  String?
+  displayName     String?
+  occupation      String?
+  isPublic        Boolean         @default(true)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  extraProfiles   ExtraProfile[]
 }
 
 model ExtraProfile {
-  id           Int         @id @default(autoincrement())
-  profileId    Int
-  profile      Profile     @relation(fields: [profileId], references: [id])
-  title        String
-  content      String
-  contentType  ContentType @relation(fields: [contentTypeId], references: [id])
-  contentTypeId Int
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @default(now()) @updatedAt
+  id             Int         @id @default(autoincrement())
+  profileId      Int
+  profile        Profile     @relation(fields: [profileId], references: [id])
+  title          String
+  content        String
+  contentType    ContentType @relation(fields: [contentTypeId], references: [id])
+  contentTypeId  Int
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
 }
 
 model ContentType {
-  id               Int       @id @default(autoincrement())
-  name             String    @unique
-  extraProfiles    ExtraProfile[]
+  id             Int            @id @default(autoincrement())
+  name           String         @unique
+  extraProfiles  ExtraProfile[]
+}
+
+model PaymentMethod {
+  id             Int         @id @default(autoincrement())
+  userId         Int
+  user           User        @relation(fields: [userId], references: [id])
+  paymentTypeId  Int
+  paymentType    PaymentType @relation(fields: [paymentTypeId], references: [id])
+  key            String
+  secret         String
+  merchantId     String?
+}
+
+model PaymentType {
+  id              Int             @id @default(autoincrement())
+  name            String          @unique
+  enabled         Boolean         @default(true)
+  paymentMethods  PaymentMethod[]
 }

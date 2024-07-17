@@ -119,20 +119,20 @@ export default function EditProfilePage() {
     }
 
     try {
-      let avatarURL = profileUser?.avatarUrl;
-      let headerImageURL = profileUser?.headerImageUrl;
+      let avatarUrl = profileUser?.avatarUrl;
+      let headerImageUrl = profileUser?.headerImageUrl;
 
       if (avatarFile) {
-        avatarURL = await handleImageUpload(avatarFile, `avatars/${memberNumber}`);
+        avatarUrl = await handleImageUpload(avatarFile, `avatars/${memberNumber}`);
       }
 
       if (headerFile) {
-        headerImageURL = await handleImageUpload(headerFile, `headers/${memberNumber}`);
+        headerImageUrl = await handleImageUpload(headerFile, `headers/${memberNumber}`);
       }
 
       const updatedProfileUser = {
-        avatarURL: profileUser?.avatarUrl ?? undefined,
-        headerImageURL: profileUser?.headerImageUrl ?? undefined,
+        avatarUrl: profileUser?.avatarUrl ?? undefined,
+        headerImageUrl: profileUser?.headerImageUrl ?? undefined,
         displayName: profileUser?.displayName ?? undefined,
         occupation: profileUser?.occupation ?? undefined,
         isPublic: Boolean(profileUser?.isPublic ?? false),

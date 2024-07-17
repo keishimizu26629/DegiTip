@@ -36,6 +36,7 @@ const ProfilePage = () => {
         }
       } catch (error) {
         console.error('Error fetching profile data:', error);
+        router.push('/404');
       }
     };
 

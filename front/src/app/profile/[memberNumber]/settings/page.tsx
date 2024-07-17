@@ -1,32 +1,31 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+import Cookies from 'js-cookie';
 import Link from 'next/link';
 import Navbar from '../../../../components/Navbar';
-import {
-  fetchCurrentUser,
-  updateUserSettings,
-  fetchPaymentTypes,
-} from '../../../../services/mockUserService';
+import { getUserSettings, updateUserSettings, updatePaymentMethod } from '../../../../services/userService';
 import { UserSettings, PaymentMethod } from '../../../../interfaces/User';
 import { FaPencilAlt } from 'react-icons/fa';
 
 export default function UserSettingsPage() {
   const [userSettings, setUserSettings] = useState<UserSettings | null>(null);
-  const [paymentTypes, setPaymentTypes] = useState<{ id: number; name: string; enabled: boolean }[]>([]);
   const [editingUserSettings, setEditingUserSettings] = useState(false);
   const [editingPaymentMethod, setEditingPaymentMethod] = useState<number | null>(null);
+  const { memberNumber } = useParams();
   const router = useRouter();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const userData = await fetchCurrentUser('');
+        const token = Cookies.get('token');
+        if (!token) {
+          router.push(`/profile/${memberNumber}`);
+          return;
+        }
+        const userData = await getUserSettings(token);
         setUserSettings(userData);
-
-        const paymentTypesData = await fetchPaymentTypes('');
-        setPaymentTypes(paymentTypesData as { id: number; name: string; enabled: boolean }[]);
       } catch (error) {
         console.error('Error fetching user data:', error);
         router.push('/login');
@@ -34,7 +33,7 @@ export default function UserSettingsPage() {
     };
 
     fetchData();
-  }, [router]);
+  }, [router, memberNumber]);
 
   const handleInputChange = (name: string, value: string) => {
     setUserSettings((prev) => (prev ? { ...prev, [name]: value } : null));
