@@ -1,4 +1,6 @@
 import { UserProfile, ExtraProfile } from '../interfaces/Profile';
+import { UserSettings } from '../interfaces/User';
+import { PaymentMethod } from '../interfaces/Payment';
 import { decrypt } from '../utils/cryptApiKey';
 
 export async function fetchProfileUser(memberNumber: string): Promise<UserProfile> {
