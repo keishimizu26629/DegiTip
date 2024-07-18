@@ -1,8 +1,11 @@
 import PAYPAY from '@paypayopa/paypayopa-sdk-node';
+import { PrismaClient, Prisma } from '@prisma/client';
 
 const clientId = process.env.PAYPAY_API_KEY;
 const clientSecret = process.env.PAYPAY_API_SECRET;
 const merchantId = process.env.PAYPAY_MERCHANT_ID;
+
+const prisma = new PrismaClient();
 
 if (!clientId || !clientSecret || !merchantId) {
   throw new Error('PayPay API credentials are not properly configured');
@@ -96,4 +99,8 @@ export async function getPaymentDetails(merchantPaymentId: (string | number)[]) 
     console.error('Error getting payment details:', error);
     throw error;
   }
+}
+
+export async function getPaymentTypes() {
+  return prisma.paymentType.findMany();
 }

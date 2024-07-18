@@ -9,5 +9,7 @@ export interface PaymentMethod {
 }
 
 export interface PaymentType {
+  id?: number;
   name: string;
+  enabled: boolean;
 }
