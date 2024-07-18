@@ -117,7 +117,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
       )}
 
       <div className="mt-10">
-        <h2 className="text-2xl font-bold mb-6 text-gray-800">Extra Profiles</h2>
+        <h2 className="text-2xl font-bold mb-6 text-gray-800">Profiles</h2>
         <div className="space-y-4">
           {profileUser.extraProfiles && profileUser.extraProfiles.length > 0 ? (
             profileUser.extraProfiles.map((profile, index) => (
@@ -126,7 +126,7 @@ const ProfileDetails: React.FC<ProfileDetailsProps> = ({
               </div>
             ))
           ) : (
-            <p className="text-gray-500 italic">No extra profiles to display</p>
+            <p className="text-gray-500 italic">No profiles to display</p>
           )}
         </div>
         {isEditable && (
