@@ -34,6 +34,17 @@ export async function registerUser(email: string, password: string, name: string
       },
     });
 
+    // PayPayデータの自動生成
+    await prisma.paymentMethod.create({
+      data: {
+        userId: user.id,
+        paymentTypeId: 1,
+        key: '',
+        secret: '',
+        merchantId: '',
+      },
+    });
+
     const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET as string, {
       expiresIn: '1d',
     });

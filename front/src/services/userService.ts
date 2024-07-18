@@ -1,4 +1,6 @@
 import { UserProfile, ExtraProfile } from '../interfaces/Profile';
+import { UserSettings } from '../interfaces/User';
+import { PaymentMethod } from '../interfaces/Payment';
 import { decrypt } from '../utils/cryptApiKey';
 
 export async function fetchProfileUser(memberNumber: string): Promise<UserProfile> {
@@ -62,12 +64,34 @@ export async function deleteExtraProfile(token: string, extraProfileId: number):
     throw new Error('Failed to delete extra profile');
   }
 }
-export async function getUserSettings(token: string): Promise<UserSettings> {
+
+export async function updateUserSettings(
+  token: string,
+  userSettings: Partial<UserSettings>,
+): Promise<UserSettings> {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/settings`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(userSettings),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Failed to update user settings');
+  }
+
+  return response.json();
+}
+
+export async function getUserSettingsAndPaymentMethods(token: string): Promise<UserSettings> {
   const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/settings`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      Authorization: `Bearer ${token}`,
     },
   });
 
@@ -91,11 +115,43 @@ export async function getUserSettings(token: string): Promise<UserSettings> {
   return data;
 }
 
+/// PyamentのKey,Secret,MerchantIdを修正する関数
+/// PayPayのみの実装。その他の支払い方法を実装する場合は userSettings['paymentMethods']の配列をループさせる。
+export async function updatePaymentMethod(
+  token: string,
+  paymentMethods: Partial<PaymentMethod>,
+): Promise<PaymentMethod> {
+  const paymentMethod = paymentMethods;
+  if (!paymentMethod) {
+    throw new Error('Payment method not found');
+  }
+  const { key, secret, merchantId } = paymentMethod;
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/payment-methods`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      key: key,
+      secret: secret,
+      merchantId,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Failed to update payment method');
+  }
+
+  return response.json();
+}
+
 export async function changePassword(
   token: string,
   currentPassword: string,
   newPassword: string,
-  confirmNewPassword: string
+  confirmNewPassword: string,
 ): Promise<{ success: boolean; message: string }> {
   try {
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/change-password`, {
@@ -107,7 +163,7 @@ export async function changePassword(
       body: JSON.stringify({
         currentPassword,
         newPassword,
-        confirmNewPassword
+        confirmNewPassword,
       }),
     });
 
@@ -119,18 +175,18 @@ export async function changePassword(
 
     return {
       success: true,
-      message: data.message || 'Password changed successfully'
+      message: data.message || 'Password changed successfully',
     };
   } catch (error) {
     if (error instanceof Error) {
       return {
         success: false,
-        message: error.message
+        message: error.message,
       };
     } else {
       return {
         success: false,
-        message: 'An unexpected error occurred'
+        message: 'An unexpected error occurred',
       };
     }
   }

@@ -5,12 +5,15 @@ import { useParams, useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 import Link from 'next/link';
 import Navbar from '../../../../components/Navbar';
-import { getUserSettings, updateUserSettings, updatePaymentMethod } from '../../../../services/userService';
-import { UserSettings, PaymentMethod } from '../../../../interfaces/User';
-import { FaPencilAlt } from 'react-icons/fa';
+import UserSettingsForm from '../../../../components/settings/UserSettingsForm';
+import PaymentMethodsForm from '../../../../components/settings/PaymentMethodsForm';
+import { getUserSettingsAndPaymentMethods, updateUserSettings, updatePaymentMethod } from '../../../../services/userService';
+import { UserSettings } from '../../../../interfaces/User';
+import { PaymentMethod } from '../../../../interfaces/Payment';
 
 export default function UserSettingsPage() {
   const [userSettings, setUserSettings] = useState<UserSettings | null>(null);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
   const [editingUserSettings, setEditingUserSettings] = useState(false);
   const [editingPaymentMethod, setEditingPaymentMethod] = useState<number | null>(null);
   const { memberNumber } = useParams();
@@ -24,8 +27,14 @@ export default function UserSettingsPage() {
           router.push(`/profile/${memberNumber}`);
           return;
         }
-        const userData = await getUserSettings(token);
-        setUserSettings(userData);
+        const data = await getUserSettingsAndPaymentMethods(token);
+        setUserSettings({
+          id: data.id,
+          name: data.name,
+          email: data.email,
+          memberNumber: data.memberNumber
+        });
+        setPaymentMethods(data.paymentMethods || []);
       } catch (error) {
         console.error('Error fetching user data:', error);
         router.push('/login');
@@ -40,21 +49,24 @@ export default function UserSettingsPage() {
   };
 
   const handlePaymentMethodChange = (index: number, field: keyof PaymentMethod, value: string) => {
-    setUserSettings((prev) => {
-      if (!prev) return null;
-      const updatedPaymentMethods = [...prev.paymentMethods];
-      if (!updatedPaymentMethods[index]) {
-        updatedPaymentMethods[index] = { paymentTypeId: paymentTypes[index].id } as PaymentMethod;
-      }
-      updatedPaymentMethods[index] = { ...updatedPaymentMethods[index], [field]: value };
-      return { ...prev, paymentMethods: updatedPaymentMethods };
+    setPaymentMethods((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
     });
   };
 
   const handleSaveUserSettings = async () => {
     if (!userSettings) return;
+    const token = Cookies.get('token');
+    if (!token) {
+      alert('Authentication token not found. Please log in again.');
+      router.push('/login');
+      return;
+    }
     try {
-      await updateUserSettings('', userSettings);
+      const updatedSettings = await updateUserSettings(token, userSettings);
+      setUserSettings(updatedSettings);
       alert('User settings updated successfully');
       setEditingUserSettings(false);
     } catch (error) {
@@ -64,9 +76,22 @@ export default function UserSettingsPage() {
   };
 
   const handleSavePaymentMethod = async (index: number) => {
-    if (!userSettings) return;
+    const token = Cookies.get('token');
+    if (!token) {
+      alert('Authentication token not found. Please log in again.');
+      router.push('/login');
+      return;
+    }
     try {
-      await updateUserSettings('', userSettings);
+      const paymentMethod = paymentMethods[index];
+      const updatedPaymentMethod = await updatePaymentMethod(token, paymentMethod);
+
+      setPaymentMethods(prev => {
+        const updated = [...prev];
+        updated[index] = updatedPaymentMethod;
+        return updated;
+      });
+
       alert('Payment method updated successfully');
       setEditingPaymentMethod(null);
     } catch (error) {
@@ -75,7 +100,7 @@ export default function UserSettingsPage() {
     }
   };
 
-  if (!userSettings) {
+  if (!userSettings || paymentMethods.length === 0) {
     return (
       <div className="flex justify-center items-center h-screen bg-white">
         <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-600"></div>
@@ -87,52 +112,19 @@ export default function UserSettingsPage() {
     <div className="bg-white min-h-screen pt-16">
       <Navbar
         isLoggedIn={true}
-        avatarUrl={userSettings.profile?.avatarUrl}
+        avatarUrl={null}
         memberNumber={userSettings.memberNumber}
       />
       <div className="container mx-auto p-6">
         <h1 className="text-3xl font-bold mb-6">Settings</h1>
 
-        <div className="mb-8">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold">User Settings</h2>
-            <button
-              onClick={() => setEditingUserSettings(!editingUserSettings)}
-              className="text-indigo-600 hover:text-indigo-800"
-            >
-              <FaPencilAlt />
-            </button>
-          </div>
-          <div className="space-y-4">
-            {['name', 'email', 'memberNumber'].map((field) => (
-              <div key={field}>
-                <label className="block text-sm font-medium text-gray-700">
-                  {field.charAt(0).toUpperCase() + field.slice(1)}
-                </label>
-                {editingUserSettings ? (
-                  <input
-                    type="text"
-                    value={userSettings[field as keyof UserSettings] as string}
-                    onChange={(e) => handleInputChange(field, e.target.value)}
-                    className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                  />
-                ) : (
-                  <div className="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 p-2">
-                    {userSettings[field as keyof UserSettings] as string}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-          {editingUserSettings && (
-            <button
-              onClick={handleSaveUserSettings}
-              className="mt-4 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-            >
-              Save Changes
-            </button>
-          )}
-        </div>
+        <UserSettingsForm
+          userSettings={userSettings}
+          editingUserSettings={editingUserSettings}
+          onInputChange={handleInputChange}
+          onSaveUserSettings={handleSaveUserSettings}
+          setEditingUserSettings={setEditingUserSettings}
+        />
 
         <div className="mb-8">
           <h2 className="text-2xl font-bold mb-4">Change Password</h2>
@@ -141,56 +133,13 @@ export default function UserSettingsPage() {
           </Link>
         </div>
 
-        <div>
-          <h2 className="text-2xl font-bold mb-4">Payment Methods</h2>
-          {paymentTypes.filter(type => type.enabled).map((type, index) => {
-            const paymentMethod = userSettings.paymentMethods.find(
-              (m) => m.paymentTypeId === type.id
-            ) || { paymentTypeId: type.id, key: '', secret: '', merchantId: '' };
-            return (
-              <div key={type.id} className="border p-4 rounded-md mb-4">
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="font-bold">{type.name}</h3>
-                  <button
-                    onClick={() => setEditingPaymentMethod(editingPaymentMethod === index ? null : index)}
-                    className="text-indigo-600 hover:text-indigo-800"
-                  >
-                    <FaPencilAlt />
-                  </button>
-                </div>
-                {['key', 'secret', 'merchantId'].map((field) => (
-                  <div key={field}>
-                    <label className="block text-sm font-medium text-gray-700">
-                      {field.charAt(0).toUpperCase() + field.slice(1)}
-                    </label>
-                    {editingPaymentMethod === index ? (
-                      <input
-                        type="text"
-                        value={(paymentMethod as PaymentMethod)[field as keyof PaymentMethod] || ''}
-                        onChange={(e) => handlePaymentMethodChange(index, field as keyof PaymentMethod, e.target.value)}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                      />
-                    ) : (
-                      <div className="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 p-2">
-                        {(paymentMethod as PaymentMethod)[field as keyof PaymentMethod]
-                          ? ((paymentMethod as PaymentMethod)[field as keyof PaymentMethod] as string).slice(-4).padStart(((paymentMethod as PaymentMethod)[field as keyof PaymentMethod] as string).length, '*')
-                          : ''}
-                      </div>
-                    )}
-                  </div>
-                ))}
-                {editingPaymentMethod === index && (
-                  <button
-                    onClick={() => handleSavePaymentMethod(index)}
-                    className="mt-4 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                  >
-                    Save Changes
-                  </button>
-                )}
-              </div>
-            );
-          })}
-        </div>
+        <PaymentMethodsForm
+          paymentMethods={paymentMethods}
+          editingPaymentMethod={editingPaymentMethod}
+          onPaymentMethodChange={handlePaymentMethodChange}
+          onSavePaymentMethod={handleSavePaymentMethod}
+          setEditingPaymentMethod={setEditingPaymentMethod}
+        />
       </div>
     </div>
   );

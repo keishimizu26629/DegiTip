@@ -1,17 +1,47 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, ChangeEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 import Navbar from '../../../../../components/Navbar';
-import { changePassword } from '../../../../../services/userService';
+import PasswordInput from '../../../../../components/PasswordInput';
+import { changePassword, fetchCurrentUser } from '../../../../../services/userService';
 
 export default function ChangePasswordPage() {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [memberNumber, setMemberNumber] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = Cookies.get('token');
+        if (!token) {
+          router.push('/login');
+          return;
+        }
+        const currentUser = await fetchCurrentUser(token);
+        console.log(currentUser);
+        if (!currentUser.memberNumber) {
+          router.push(`/profile/${currentUser.memberNumber}`);
+          return;
+        }
+        setMemberNumber(currentUser.memberNumber);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        router.push('/login');
+        return;
+      }
+    };
+
+    fetchData();
+  }, [router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,7 +60,7 @@ export default function ChangePasswordPage() {
       const result = await changePassword(token, currentPassword, newPassword, confirmPassword);
       if (result.success) {
         alert(result.message);
-        router.push('/settings');
+        router.push(`/profile/${memberNumber}/settings`);
       } else {
         setError(result.message);
       }
@@ -42,41 +72,32 @@ export default function ChangePasswordPage() {
 
   return (
     <div className="bg-white min-h-screen pt-16">
-      <Navbar isLoggedIn={true} avatarUrl={null} memberNumber={''} />
+      <Navbar isLoggedIn={true} avatarUrl={null} memberNumber={memberNumber} />
       <div className="container mx-auto p-6">
         <h1 className="text-3xl font-bold mb-6">Change Password</h1>
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && <p className="text-red-500">{error}</p>}
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Current Password</label>
-            <input
-              type="password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">New Password</label>
-            <input
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-              required
-            />
-          </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Confirm New Password</label>
-            <input
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-              required
-            />
-          </div>
+          <PasswordInput
+            value={currentPassword}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setCurrentPassword(e.target.value)}
+            show={showCurrentPassword}
+            setShow={setShowCurrentPassword}
+            label="Current Password"
+          />
+          <PasswordInput
+            value={newPassword}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setNewPassword(e.target.value)}
+            show={showNewPassword}
+            setShow={setShowNewPassword}
+            label="New Password"
+          />
+          <PasswordInput
+            value={confirmPassword}
+            onChange={(e: ChangeEvent<HTMLInputElement>) => setConfirmPassword(e.target.value)}
+            show={showConfirmPassword}
+            setShow={setShowConfirmPassword}
+            label="Confirm New Password"
+          />
           <div>
             <button
               type="submit"

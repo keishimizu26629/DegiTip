@@ -12,5 +12,7 @@ router.put('/me', userController.updateProfilePost);
 router.post('/me/extra-profiles/delete', authenticateToken, userController.deleteExtraProfile);
 router.post('/change-password', authenticateToken, userController.changePassword);
 router.post('/settings', authenticateToken, userController.getUserSettings);
+router.put('/settings', authenticateToken, userController.updateUserSettings);
+router.put('/payment-methods', authenticateToken, userController.updatePaymentMethods);
 
 export default router;
