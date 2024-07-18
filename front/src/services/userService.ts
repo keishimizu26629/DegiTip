@@ -67,7 +67,7 @@ export async function getUserSettings(token: string): Promise<UserSettings> {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Bearer ${token}`
+      Authorization: `Bearer ${token}`,
     },
   });
 
@@ -95,7 +95,7 @@ export async function changePassword(
   token: string,
   currentPassword: string,
   newPassword: string,
-  confirmNewPassword: string
+  confirmNewPassword: string,
 ): Promise<{ success: boolean; message: string }> {
   try {
     const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/change-password`, {
@@ -107,7 +107,7 @@ export async function changePassword(
       body: JSON.stringify({
         currentPassword,
         newPassword,
-        confirmNewPassword
+        confirmNewPassword,
       }),
     });
 
@@ -119,18 +119,18 @@ export async function changePassword(
 
     return {
       success: true,
-      message: data.message || 'Password changed successfully'
+      message: data.message || 'Password changed successfully',
     };
   } catch (error) {
     if (error instanceof Error) {
       return {
         success: false,
-        message: error.message
+        message: error.message,
       };
     } else {
       return {
         success: false,
-        message: 'An unexpected error occurred'
+        message: 'An unexpected error occurred',
       };
     }
   }

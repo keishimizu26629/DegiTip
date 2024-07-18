@@ -30,7 +30,6 @@ export const getUserByMemberNumber = async (req: Request, res: Response) => {
   }
 };
 
-
 export async function getProfile(req: Request, res: Response) {
   const userId = req.user?.userId;
 
