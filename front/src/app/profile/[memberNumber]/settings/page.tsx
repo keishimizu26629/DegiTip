@@ -58,8 +58,15 @@ export default function UserSettingsPage() {
 
   const handleSaveUserSettings = async () => {
     if (!userSettings) return;
+    const token = Cookies.get('token');
+    if (!token) {
+      alert('Authentication token not found. Please log in again.');
+      router.push('/login');
+      return;
+    }
     try {
-      await updateUserSettings('', userSettings);
+      const updatedSettings = await updateUserSettings(token, userSettings);
+      setUserSettings(updatedSettings);
       alert('User settings updated successfully');
       setEditingUserSettings(false);
     } catch (error) {
@@ -93,7 +100,7 @@ export default function UserSettingsPage() {
     }
   };
 
-  if (!userSettings) {
+  if (!userSettings || paymentMethods.length === 0) {
     return (
       <div className="flex justify-center items-center h-screen bg-white">
         <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-600"></div>
@@ -105,7 +112,7 @@ export default function UserSettingsPage() {
     <div className="bg-white min-h-screen pt-16">
       <Navbar
         isLoggedIn={true}
-        avatarUrl={userSettings.profile?.avatarUrl}
+        avatarUrl={null}
         memberNumber={userSettings.memberNumber}
       />
       <div className="container mx-auto p-6">

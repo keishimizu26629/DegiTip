@@ -127,6 +127,26 @@ export const deleteExtraProfile = async (req: Request, res: Response) => {
   }
 };
 
+/// ユーザー基本情報を変更する関数
+export const updateUserSettings = async (req: Request, res: Response) => {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+    const { name, email, memberNumber } = req.body;
+    const updatedUser = await userService.updateUserSettings(userId, { name, email, memberNumber });
+    res.json(updatedUser);
+  } catch (error) {
+    console.error('Error updating user settings:', error);
+    if (error instanceof Error) {
+      res.status(400).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+};
+
 /// PaymentMethodsを変更する関数
 export async function updatePaymentMethods(req: Request, res: Response) {
   try {

@@ -202,6 +202,32 @@ export const deleteExtraProfile = async (userId: number, extraProfileId: number)
     },
   });
 };
+
+export const updateUserSettings = async (userId: number, data: { name?: string; email?: string; memberNumber?: string }) => {
+  try {
+    const updatedUser = await prisma.user.update({
+      where: { id: userId },
+      data: {
+        name: data.name,
+        email: data.email,
+        memberNumber: data.memberNumber,
+      },
+      include: {
+        profile: true,
+        paymentMethods: true,
+      },
+    });
+    return updatedUser;
+  } catch (error) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2002') {
+        throw new Error('Member number already exists');
+      }
+    }
+    throw error;
+  }
+};
+
 export const updatePaymentMethods = async (userId: number, data: { key: string; secret: string; merchantId: string }) => {
   try {
     // 既存のPaymentMethodを取得
