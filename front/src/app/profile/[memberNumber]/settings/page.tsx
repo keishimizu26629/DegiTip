@@ -5,9 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
 import Link from 'next/link';
 import Navbar from '../../../../components/Navbar';
-import { getUserSettings, updateUserSettings, updatePaymentMethod } from '../../../../services/userService';
-import { UserSettings, PaymentMethod } from '../../../../interfaces/User';
-import { FaPencilAlt } from 'react-icons/fa';
+import { getUserSettingsAndPaymentMethods, updateUserSettings, updatePaymentMethod } from '../../../../services/userService';
 
 export default function UserSettingsPage() {
   const [userSettings, setUserSettings] = useState<UserSettings | null>(null);
@@ -24,8 +22,14 @@ export default function UserSettingsPage() {
           router.push(`/profile/${memberNumber}`);
           return;
         }
-        const userData = await getUserSettings(token);
-        setUserSettings(userData);
+        const data = await getUserSettingsAndPaymentMethods(token);
+        setUserSettings({
+          id: data.id,
+          name: data.name,
+          email: data.email,
+          memberNumber: data.memberNumber
+        });
+        setPaymentMethods(data.paymentMethods || []);
       } catch (error) {
         console.error('Error fetching user data:', error);
         router.push('/login');
@@ -40,14 +44,10 @@ export default function UserSettingsPage() {
   };
 
   const handlePaymentMethodChange = (index: number, field: keyof PaymentMethod, value: string) => {
-    setUserSettings((prev) => {
-      if (!prev) return null;
-      const updatedPaymentMethods = [...prev.paymentMethods];
-      if (!updatedPaymentMethods[index]) {
-        updatedPaymentMethods[index] = { paymentTypeId: paymentTypes[index].id } as PaymentMethod;
-      }
-      updatedPaymentMethods[index] = { ...updatedPaymentMethods[index], [field]: value };
-      return { ...prev, paymentMethods: updatedPaymentMethods };
+    setPaymentMethods((prev) => {
+      const updated = [...prev];
+      updated[index] = { ...updated[index], [field]: value };
+      return updated;
     });
   };
 
@@ -64,9 +64,22 @@ export default function UserSettingsPage() {
   };
 
   const handleSavePaymentMethod = async (index: number) => {
-    if (!userSettings) return;
+    const token = Cookies.get('token');
+    if (!token) {
+      alert('Authentication token not found. Please log in again.');
+      router.push('/login');
+      return;
+    }
     try {
-      await updateUserSettings('', userSettings);
+      const paymentMethod = paymentMethods[index];
+      const updatedPaymentMethod = await updatePaymentMethod(token, paymentMethod);
+
+      setPaymentMethods(prev => {
+        const updated = [...prev];
+        updated[index] = updatedPaymentMethod;
+        return updated;
+      });
+
       alert('Payment method updated successfully');
       setEditingPaymentMethod(null);
     } catch (error) {

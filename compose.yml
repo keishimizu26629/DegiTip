@@ -23,6 +23,7 @@ services:
       - "3001:3000"
     environment:
       NEXT_PUBLIC_API_URL: http://localhost:3000
+      API_COMPILE_SECRET_KEY: ${API_COMPILE_SECRET_KEY}
     volumes:
       - ./front:/usr/src/app
       - ./front/next.config.mjs:/usr/src/app/next.config.mjs

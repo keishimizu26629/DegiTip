@@ -1,5 +1,6 @@
 import { PrismaClient, Prisma } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { encrypt, decrypt } from '../utils/cryptApiKey';
 
 const prisma = new PrismaClient();
 
@@ -200,6 +201,45 @@ export const deleteExtraProfile = async (userId: number, extraProfileId: number)
       },
     },
   });
+};
+export const updatePaymentMethods = async (userId: number, data: { key: string; secret: string; merchantId: string }) => {
+  try {
+    // 既存のPaymentMethodを取得
+    const existingPaymentMethod = await prisma.paymentMethod.findFirst({
+      where: { userId: userId },
+    });
+
+    if (!existingPaymentMethod) {
+      throw new Error('Payment method not found');
+    }
+
+    // データを暗号化
+    const encryptedKey = encrypt(data.key);
+    const encryptedSecret = encrypt(data.secret);
+    const encryptedMerchantId = encrypt(data.merchantId);
+
+    // 暗号化されたデータで更新
+    const updatedPayment = await prisma.paymentMethod.update({
+      where: { id: existingPaymentMethod.id },
+      data: {
+        key: encryptedKey,
+        secret: encryptedSecret,
+        merchantId: encryptedMerchantId,
+      },
+      include: { paymentType: true } // PaymentTypeも含めて取得
+    });
+
+    // 更新されたデータを復号化して返す
+    return {
+      ...updatedPayment,
+      key: decrypt(updatedPayment.key),
+      secret: decrypt(updatedPayment.secret),
+      merchantId: decrypt(updatedPayment.merchantId!),
+      paymentType: updatedPayment.paymentType
+    };
+  } catch (error) {
+    throw error;
+  }
 };
 
 export async function changePassword(userId: number, currentPassword: string, newPassword: string): Promise<{ success: boolean; message: string }> {

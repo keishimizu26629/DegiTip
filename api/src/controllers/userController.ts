@@ -127,6 +127,43 @@ export const deleteExtraProfile = async (req: Request, res: Response) => {
   }
 };
 
+/// PaymentMethodsを変更する関数
+export async function updatePaymentMethods(req: Request, res: Response) {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+    const { key, secret, merchantId } = req.body;
+    const updatedPayment = await userService.updatePaymentMethods(userId, {
+      key,
+      secret,
+      merchantId,
+    });
+
+    // 機密情報を除外してクライアントに返す
+    const safePaymentInfo = {
+      id: updatedPayment.id,
+      userId: updatedPayment.userId,
+      paymentTypeId: updatedPayment.paymentTypeId,
+      paymentType: updatedPayment.paymentType,
+      key: updatedPayment.key,
+      secret: updatedPayment.secret,
+      merchantId: updatedPayment.merchantId,
+    };
+
+    res.json(safePaymentInfo);
+  } catch (error) {
+    console.error('Error updating payment methods:', error);
+    if (error instanceof Error) {
+      res.status(400).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+}
+
+/// パスワード変更する関数
 export async function changePassword(req: Request, res: Response) {
   try {
     const userId = req.user?.userId;
