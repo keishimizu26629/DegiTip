@@ -47,3 +47,13 @@ export async function getPayPayConfig(req: Request, res: Response) {
     clientSecret
   });
 }
+
+export async function getPaymentTypes(req: Request, res: Response) {
+  try {
+    const users = await paymentService.getPaymentTypes();
+    res.json(users);
+  } catch (error) {
+    console.error('Error fetching paymentTypes:', error);
+    res.status(500).json({ error: 'Failed to fetch paymentTypes' });
+  }
+}
