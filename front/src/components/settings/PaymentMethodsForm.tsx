@@ -1,14 +1,6 @@
-import React from 'react';
-import { PaymentMethod } from '../../interfaces/Payment';
+import React, { useState, useEffect } from 'react';
+import { PaymentMethod, PaymentMethodsFormProps } from '../../interfaces/Payment';
 import { FaPencilAlt } from 'react-icons/fa';
-
-interface PaymentMethodsFormProps {
-  paymentMethods: PaymentMethod[];
-  editingPaymentMethod: number | null;
-  onPaymentMethodChange: (index: number, field: keyof PaymentMethod, value: string) => void;
-  onSavePaymentMethod: (index: number) => void;
-  setEditingPaymentMethod: (index: number | null) => void;
-}
 
 const PaymentMethodsForm: React.FC<PaymentMethodsFormProps> = ({
   paymentMethods,
@@ -17,13 +9,44 @@ const PaymentMethodsForm: React.FC<PaymentMethodsFormProps> = ({
   onSavePaymentMethod,
   setEditingPaymentMethod,
 }) => {
+  const [localPaymentMethods, setLocalPaymentMethods] = useState<PaymentMethod[]>([]);
+
+  useEffect(() => {
+    if (paymentMethods.length === 0) {
+      // PayPay の空のメソッドを追加
+      setLocalPaymentMethods([
+        {
+          id: '',
+          userId: 0,
+          paymentTypeId: 1, // PayPay のID（仮の値）
+          key: '',
+          secret: '',
+          merchantId: '',
+          paymentType: { id: 1, name: 'PayPay', enabled: true },
+        },
+      ]);
+    } else {
+      // paymentType が undefined の場合、デフォルト値を設定
+      const updatedPaymentMethods = paymentMethods.map(method => ({
+        ...method,
+        paymentType: method.paymentType || { id: 0, name: 'Unknown', enabled: true }
+      }));
+      setLocalPaymentMethods(updatedPaymentMethods);
+    }
+  }, [paymentMethods]);
+
+  const handleSave = (index: number) => {
+    const updatedMethod = localPaymentMethods[index];
+    onSavePaymentMethod(index, updatedMethod);
+  };
+
   return (
     <div>
       <h2 className="text-2xl font-bold mb-4">Payment Methods</h2>
-      {paymentMethods.map((paymentMethod, index) => (
-        <div key={paymentMethod.id} className="border p-4 rounded-md mb-4">
+      {localPaymentMethods.map((paymentMethod, index) => (
+        <div key={index} className="border p-4 rounded-md mb-4">
           <div className="flex justify-between items-center mb-2">
-            <h3 className="font-bold">{paymentMethod.paymentType.name}</h3>
+            <h3 className="font-bold">{paymentMethod.paymentType?.name || 'Unknown'}</h3>
             <button
               onClick={() => setEditingPaymentMethod(editingPaymentMethod === index ? null : index)}
               className="text-indigo-600 hover:text-indigo-800"
@@ -61,10 +84,10 @@ const PaymentMethodsForm: React.FC<PaymentMethodsFormProps> = ({
           ))}
           {editingPaymentMethod === index && (
             <button
-              onClick={() => onSavePaymentMethod(index)}
+              onClick={() => handleSave(index)}
               className="mt-4 py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
-              Save Changes
+              Update Payment Method
             </button>
           )}
         </div>

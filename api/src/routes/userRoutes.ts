@@ -14,5 +14,6 @@ router.post('/change-password', authenticateToken, userController.changePassword
 router.post('/settings', authenticateToken, userController.getUserSettings);
 router.put('/settings', authenticateToken, userController.updateUserSettings);
 router.put('/payment-methods', authenticateToken, userController.updatePaymentMethods);
+router.post('/payment-methods', authenticateToken, userController.addPaymentMethod);
 
 export default router;

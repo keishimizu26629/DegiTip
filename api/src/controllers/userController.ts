@@ -147,6 +147,42 @@ export const updateUserSettings = async (req: Request, res: Response) => {
   }
 };
 
+// PaymentMethodsを新規作成する
+export async function addPaymentMethod(req: Request, res: Response) {
+  try {
+    const userId = req.user?.userId;
+    if (!userId) {
+      return res.status(401).json({ message: 'Unauthorized' });
+    }
+    const { key, secret, merchantId } = req.body;
+    const newPayment = await userService.addPaymentMethod(userId, {
+      key,
+      secret,
+      merchantId,
+    });
+
+    // 機密情報を除外してクライアントに返す
+    const safePaymentInfo = {
+      id: newPayment.id,
+      userId: newPayment.userId,
+      paymentTypeId: newPayment.paymentTypeId,
+      paymentType: newPayment.paymentType,
+      key: newPayment.key,
+      secret: newPayment.secret,
+      merchantId: newPayment.merchantId,
+    };
+
+    res.status(201).json(safePaymentInfo);
+  } catch (error) {
+    console.error('Error adding payment method:', error);
+    if (error instanceof Error) {
+      res.status(400).json({ message: error.message });
+    } else {
+      res.status(500).json({ message: 'Internal server error' });
+    }
+  }
+}
+
 /// PaymentMethodsを変更する関数
 export async function updatePaymentMethods(req: Request, res: Response) {
   try {
