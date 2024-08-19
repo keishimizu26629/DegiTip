@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { createPayment } from '../../../../services/paymentService';
 import Image from 'next/image';
+import Navbar from '../../../../components/Navbar';
+import Cookies from 'js-cookie';
 
 export default function PaymentPage() {
   const router = useRouter();
@@ -13,6 +15,8 @@ export default function PaymentPage() {
   const [amount, setAmount] = useState('');
   const [message, setMessage] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<string | null>(null);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentUserMemberNumber, setCurrentUserMemberNumber] = useState<string | null>(null);
 
   useEffect(() => {
     const urlMemberNumber = params.memberNumber;
@@ -23,6 +27,14 @@ export default function PaymentPage() {
     const method = searchParams?.get('method');
     if (method) {
       setPaymentMethod(method);
+    }
+
+    const token = Cookies.get('token');
+    if (token) {
+      setIsLoggedIn(true);
+      // TODO: Implement fetching current user's memberNumber
+      // const currentUser = await fetchCurrentUser(token);
+      // setCurrentUserMemberNumber(currentUser.memberNumber);
     }
   }, [params, searchParams]);
 
@@ -41,58 +53,41 @@ export default function PaymentPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <Image
-          src={`/images/${paymentMethod?.toLowerCase()}-icon.png`}
-          alt={`${paymentMethod} icon`}
-          width={64}
-          height={64}
-          className="mx-auto"
-        />
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-          支払い詳細
-        </h2>
-      </div>
-
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <form onSubmit={handleSubmit} className="space-y-6">
+    <div className="min-h-screen bg-gray-100 flex flex-col">
+      <Navbar isLoggedIn={isLoggedIn} avatarUrl={null} memberNumber={currentUserMemberNumber || ''} />
+      <div className="flex-grow container mx-auto p-6">
+        <h1 className="text-2xl font-bold mb-4">支払い詳細</h1>
+        <div className="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label htmlFor="amount" className="block text-sm font-medium text-gray-700">
                 金額 (円)
               </label>
-              <div className="mt-1">
-                <input
-                  type="number"
-                  id="amount"
-                  value={amount}
-                  onChange={(e) => setAmount(e.target.value)}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                  required
-                />
-              </div>
+              <input
+                type="number"
+                id="amount"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                required
+              />
             </div>
-
             <div>
               <label htmlFor="message" className="block text-sm font-medium text-gray-700">
                 メッセージ (任意)
               </label>
-              <div className="mt-1">
-                <textarea
-                  id="message"
-                  value={message}
-                  onChange={(e) => setMessage(e.target.value)}
-                  rows={3}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                />
-              </div>
+              <textarea
+                id="message"
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
+                rows={3}
+              />
             </div>
-
             <div>
               <button
                 type="submit"
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline"
               >
                 支払いサイトへ
               </button>

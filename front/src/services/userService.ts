@@ -109,10 +109,10 @@ export async function getUserSettingsAndPaymentMethods(token: string): Promise<U
     data.paymentMethods = data.paymentMethods.map((method: PaymentMethod) => {
       try {
         return {
-      ...method,
-      key: method.key ? decrypt(method.key) : null,
-      secret: method.secret ? decrypt(method.secret) : null,
-      merchantId: method.merchantId ? decrypt(method.merchantId) : null,
+          ...method,
+          key: method.key ? decrypt(method.key) : null,
+          secret: method.secret ? decrypt(method.secret) : null,
+          merchantId: method.merchantId ? decrypt(method.merchantId) : null,
         };
       } catch (error) {
         console.error('Decryption error:', error);
@@ -199,4 +199,26 @@ export async function changePassword(
       };
     }
   }
+}
+
+export async function addPaymentMethod(token: string, paymentMethod: PaymentMethod): Promise<PaymentMethod> {
+  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/users/payment-methods`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({
+      key: paymentMethod.key,
+      secret: paymentMethod.secret,
+      merchantId: paymentMethod.merchantId,
+    }),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || 'Failed to add payment method');
+  }
+
+  return await response.json();
 }

@@ -228,6 +228,47 @@ export const updateUserSettings = async (userId: number, data: { name?: string; 
   }
 };
 
+export const addPaymentMethod = async (userId: number, data: { key: string; secret: string; merchantId: string }) => {
+  try {
+    // 既存のPaymentMethodを確認
+    const existingPaymentMethod = await prisma.paymentMethod.findFirst({
+      where: { userId: userId },
+    });
+
+    if (existingPaymentMethod) {
+      throw new Error('Payment method already exists for this user');
+    }
+
+    // データを暗号化
+    const encryptedKey = encrypt(data.key);
+    const encryptedSecret = encrypt(data.secret);
+    const encryptedMerchantId = encrypt(data.merchantId);
+
+    // 新しいPaymentMethodを作成
+    const newPayment = await prisma.paymentMethod.create({
+      data: {
+        userId: userId,
+        paymentTypeId: 1, // PayPay用のID（仮の値）
+        key: encryptedKey,
+        secret: encryptedSecret,
+        merchantId: encryptedMerchantId,
+      },
+      include: { paymentType: true } // PaymentTypeも含めて取得
+    });
+
+    // 作成されたデータを復号化して返す
+    return {
+      ...newPayment,
+      key: decrypt(newPayment.key),
+      secret: decrypt(newPayment.secret),
+      merchantId: decrypt(newPayment.merchantId!),
+      paymentType: newPayment.paymentType
+    };
+  } catch (error) {
+    throw error;
+  }
+};
+
 export const updatePaymentMethods = async (userId: number, data: { key: string; secret: string; merchantId: string }) => {
   try {
     // 既存のPaymentMethodを取得

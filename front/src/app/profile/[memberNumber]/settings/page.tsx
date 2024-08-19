@@ -7,13 +7,14 @@ import Link from 'next/link';
 import Navbar from '../../../../components/Navbar';
 import UserSettingsForm from '../../../../components/settings/UserSettingsForm';
 import PaymentMethodsForm from '../../../../components/settings/PaymentMethodsForm';
-import { getUserSettingsAndPaymentMethods, updateUserSettings, updatePaymentMethod } from '../../../../services/userService';
+import { getUserSettingsAndPaymentMethods, updateUserSettings, updatePaymentMethod, addPaymentMethod } from '../../../../services/userService';
 import { UserSettings } from '../../../../interfaces/User';
 import { PaymentMethod } from '../../../../interfaces/Payment';
 
 export default function UserSettingsPage() {
   const [userSettings, setUserSettings] = useState<UserSettings | null>(null);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [loading, setLoading] = useState(true);
   const [editingUserSettings, setEditingUserSettings] = useState(false);
   const [editingPaymentMethod, setEditingPaymentMethod] = useState<number | null>(null);
   const { memberNumber } = useParams();
@@ -127,6 +128,14 @@ export default function UserSettingsPage() {
     return (
       <div className="flex justify-center items-center h-screen bg-white">
         <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  if (!userSettings) {
+    return (
+      <div className="flex justify-center items-center h-screen bg-white">
+        <p>Error loading user settings. Please try again later.</p>
       </div>
     );
   }
