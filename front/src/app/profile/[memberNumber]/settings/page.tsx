@@ -24,10 +24,13 @@ export default function UserSettingsPage() {
       try {
         const token = Cookies.get('token');
         if (!token) {
+          console.error('No token found');
           router.push(`/profile/${memberNumber}`);
           return;
         }
+        console.log('Fetching user data...');
         const data = await getUserSettingsAndPaymentMethods(token);
+        console.log('User data fetched:', data);
         setUserSettings({
           id: data.id,
           name: data.name,
@@ -35,9 +38,25 @@ export default function UserSettingsPage() {
           memberNumber: data.memberNumber
         });
         setPaymentMethods(data.paymentMethods || []);
+        if (setPaymentMethods.length === 0) {
+          // 支払い方法がない場合、空の支払い方法を追加
+          setPaymentMethods([{
+            id: '',
+            userId: data.id,
+            paymentTypeId: 0,
+            key: '',
+            secret: '',
+            merchantId: '',
+            paymentType: { name: '', enabled: true }
+          }]);
+          setEditingPaymentMethod(0);  // 編集モードを有効にする
+        }
       } catch (error) {
-        console.error('Error fetching user data:', error);
-        router.push('/login');
+        console.error('Error in fetchData:', error);
+        setUserSettings(null);
+        setPaymentMethods([]);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -75,7 +94,7 @@ export default function UserSettingsPage() {
     }
   };
 
-  const handleSavePaymentMethod = async (index: number) => {
+  const handleSavePaymentMethod = async (index: number, updatedMethod: PaymentMethod) => {
     const token = Cookies.get('token');
     if (!token) {
       alert('Authentication token not found. Please log in again.');
@@ -83,24 +102,28 @@ export default function UserSettingsPage() {
       return;
     }
     try {
-      const paymentMethod = paymentMethods[index];
-      const updatedPaymentMethod = await updatePaymentMethod(token, paymentMethod);
+      let result: PaymentMethod;
+      if (updatedMethod.id) {
+        result = await updatePaymentMethod(token, updatedMethod);
+      } else {
+        result = await addPaymentMethod(token, updatedMethod);
+      }
 
       setPaymentMethods(prev => {
         const updated = [...prev];
-        updated[index] = updatedPaymentMethod;
+        updated[index] = result;
         return updated;
       });
 
-      alert('Payment method updated successfully');
+      alert('Payment method saved successfully');
       setEditingPaymentMethod(null);
     } catch (error) {
-      console.error('Error updating payment method:', error);
-      alert('Failed to update payment method');
+      console.error('Error saving payment method:', error);
+      alert('Failed to save payment method');
     }
   };
 
-  if (!userSettings || paymentMethods.length === 0) {
+  if (loading) {
     return (
       <div className="flex justify-center items-center h-screen bg-white">
         <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-indigo-600"></div>

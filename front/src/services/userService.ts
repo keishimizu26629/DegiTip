@@ -96,7 +96,9 @@ export async function getUserSettingsAndPaymentMethods(token: string): Promise<U
   });
 
   if (!response.ok) {
+    console.error('Error response:', response);
     const errorData = await response.json();
+    console.error('Error data:', errorData);
     throw new Error(errorData.message || 'Failed to fetch user settings');
   }
 
@@ -104,12 +106,19 @@ export async function getUserSettingsAndPaymentMethods(token: string): Promise<U
 
   // Decrypt payment method information
   if (data.paymentMethods) {
-    data.paymentMethods = data.paymentMethods.map((method: PaymentMethod) => ({
+    data.paymentMethods = data.paymentMethods.map((method: PaymentMethod) => {
+      try {
+        return {
       ...method,
       key: method.key ? decrypt(method.key) : null,
       secret: method.secret ? decrypt(method.secret) : null,
       merchantId: method.merchantId ? decrypt(method.merchantId) : null,
-    }));
+        };
+      } catch (error) {
+        console.error('Decryption error:', error);
+        return method; // または適切なエラー処理
+      }
+    });
   }
 
   return data;
