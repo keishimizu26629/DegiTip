@@ -20,6 +20,9 @@ model User {
   updatedAt         DateTime        @updatedAt
   profile           Profile?
   paymentMethods    PaymentMethod[]
+  sentTransactions     Transaction[] @relation("sender")
+  receivedTransactions Transaction[] @relation("receiver")
+  userBalance          UserBalance?
 }
 
 model Profile {
@@ -70,4 +73,32 @@ model PaymentType {
   name            String          @unique
   enabled         Boolean         @default(true)
   paymentMethods  PaymentMethod[]
+}
+
+model Transaction {
+  id                Int      @id @default(autoincrement())
+  senderId          Int
+  sender            User     @relation("sender", fields: [senderId], references: [id])
+  receiverId        Int
+  receiver          User     @relation("receiver", fields: [receiverId], references: [id])
+  amount            Decimal
+  comment           String?
+  currency          String
+  status            String
+  merchantPaymentId String   @unique
+  isDirectPayment   Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  userBalance       UserBalance? @relation(fields: [userBalanceId], references: [id])
+  userBalanceId     Int?
+}
+
+model UserBalance {
+  id              Int           @id @default(autoincrement())
+  userId          Int           @unique
+  user            User          @relation(fields: [userId], references: [id])
+  balance         Decimal
+  transactions    Transaction[]
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 }
